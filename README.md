@@ -4,5 +4,5 @@ Provides data analysis tools for ISY project "Multimodal object tracking on a mo
 ### Should also inlude
   * /classifiers_best_params
   * /trained_classifiers
-  * /plots
+  * /plots  
 and the /cupsnbottles directory with files
