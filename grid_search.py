@@ -26,9 +26,8 @@ from joblib import dump, load
 
 
 classifier = None # If none is given from classifier_names, then gs is performed on all classifiers.
-num_samples = 2179 #at most 2179
-#num_samples = None
-dims = None
+num_samples = 2179 #at most 2179, default: None
+dims = None # number of dimensions to reduce to before training
 dims_method = None
 #dims_method = 'pca'
 #dims_method = 'tsne'
@@ -61,7 +60,7 @@ def grid_search(X, y, classifier=None):
         {'max_depth':[None, 5, 10], 'n_estimators':[10, 50, 100], 'max_features':[1]}, # Random Forest
         {'alpha': [0.0001, 0.001], 'max_iter': [1000, 2000]}, # Neural Net
         {}, # Naive Bayes
-        #{'var_smoothing': [1e-9]}, # Naive Bayes
+        #{'var_smoothing': [1e-9]}, # Naive Bayes this does not work eventough it's the default value
         {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}] # Quadratic Discriminant Analysis
 
     classifiers = [
@@ -135,8 +134,8 @@ def dim_red(X, dims=2, init='pca'):
 def main():
 
     # load the data
-    X = load_cupsnbottles.load_features('')
-    df = load_cupsnbottles.load_properties('')
+    X = load_cupsnbottles.load_features('cupsnbottles/')
+    df = load_cupsnbottles.load_properties('cupsnbottles/')
     y = np.array(df.label)
     #y = y.astype(int)
     if num_samples is not None:

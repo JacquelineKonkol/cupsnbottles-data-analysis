@@ -25,13 +25,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
 
-num_samples = 2179
-dims = 2
-classifier = 'Neural Net'
 
-path_trained_classifiers = 'trained_classifiers/'
-
-def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, perplexity=30, learning_rate=200.0):
+def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, dims=2, perplexity=30, learning_rate=200.0):
     """
     nD case: returns data embedded into n dimensions using t_sne
     3D case: simple t-SNE 3D plot with gt labels
@@ -113,7 +108,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, perplexity=30
 
 
 ########### TODO testen
-def confidence_scatter(X_embedded, df, imgs, indices, title):
+def image_scatter(X_embedded, df, imgs, indices, title):
     """
     :param: X_embedded = should be 2D
     :param: df = dataframe containing the images load_properties
@@ -126,69 +121,3 @@ def confidence_scatter(X_embedded, df, imgs, indices, title):
     fig.suptitle(title)
     plt.grid()
     plt.show()
-
-    # add sample images into the scatter plot
-    # imgs_to_plot = 200
-    ## df = load_cupsnbottles.load_properties('cupsnbottles/')
-    ## inds = np.array(df.index)
-    ## random_inds = np.random.randint(0, len(y_gt), (imgs_to_plot))
-    ## imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
-    # artists = img_scatter.imageScatter(X_embedded[random_inds, 0],
-    #                     X_embedded[random_inds, 1],imgs,img_scale=(13,13))
-    # plt.show()
-    pass
-
-def load_gt_data():
-    X = load_cupsnbottles.load_features('cupsnbottles/')
-    print(X)
-    df = load_cupsnbottles.load_properties('cupsnbottles/')
-    y = np.array(df.label)
-    labels_old = np.unique(y)
-    for (i, label) in enumerate(labels_old):
-        y[y == label] = i
-    y = y.astype(int)
-    X = X[:num_samples]
-    y = y[:num_samples]
-
-    return X, y, labels_old
-
-
-X, y, labels_old = load_gt_data()
-X_train,X_test,y_train,y_test = model_selection.train_test_split(X,y,test_size=0.3)
-
-# load the desired classifier
-clf = load(path_trained_classifiers + classifier.replace(' ', '_') + ".joblib")
-
-#clf = KNeighborsClassifier(**clf.best_params_)
-#clf = SVC(**clf.best_params_)
-#clf = GaussianProcessClassifier(**clf.best_params_)
-#clf = DecisionTreeClassifier(**clf.best_params_)
-#clf = RandomForestClassifier(**clf.best_params_)
-clf = MLPClassifier(**clf.best_params_)
-#clf = GaussianNB(**clf.best_params_)
-#clf = QuadraticDiscriminantAnalysis(**clf.best_params_)
-
-classifiers = [
-     KNeighborsClassifier(**clf.best_params_),
-     SVC(**clf.best_params_),
-     SVC(**clf.best_params_),
-     GaussianProcessClassifier(**clf.best_params_),
-     DecisionTreeClassifier(**clf.best_params_),
-     RandomForestClassifier(**clf.best_params_),
-     MLPClassifier(**clf.best_params_),
-     GaussianNB(**clf.best_params_),
-     QuadraticDiscriminantAnalysis(**clf.best_params_)]
-
-clf.fit(X_train, y_train)
-y_pred = clf.predict(X_test)
-score = clf.score(X_test, y_test)
-for (i, label) in enumerate(labels_old):
-    y_pred[y_pred == label] = i
-y_pred = y_pred.astype(int)
-pred_proba = clf.predict_proba(X_test)
-pred_proba = np.max(pred_proba, axis=1)
-
-title = classifier + ', trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-
-
-X_embedded = t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title)

@@ -1,7 +1,6 @@
 # TODO generalize so different datasets can be used
-# TODO falls trainierter Classifier genommen werden soll
+# TODO falls vortrainierter Classifier: welche Testdaten sollen genommen werden?
 # TODO falls Classifier beste Parameter laden und mit diesen neu trainiert werden soll
-# TODO plotting.py verwenden
 # TODO confusion Matrix verwenden
 # TODO img_scatter Sache? Vielleicht diejenigen Puntke, die falsch oder mit wenig confidence klassifiziert wurden darstellen?
 
@@ -28,8 +27,10 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
 
 """specify"""
-classifier = None #
 classifier = 'Neural Net'
+use_pretrained_classifier = False
+imgs_scatter_threshold = True # uses a confidence threshold to decide what images to
+                              # use in the scatterplot, random otherwise
 
 num_samples = 2179
 dims = 2
@@ -56,35 +57,29 @@ def load_gt_data():
 
 def main():
 
-# das ist noch alles scheisse, weil der die trainierten Classifier lädt und daraus die parameter nimmt
-
     X, y, labels_old, df = load_gt_data()
     X_train,X_test,y_train,y_test = model_selection.train_test_split(X,y,test_size=0.3)
 
-    # load the desired classifier
-    clf = load(path_trained_classifiers + classifier.replace(' ', '_') + ".joblib")
+    if use_pretrained_classifier:
+        # load the desired trained classifier
+        clf = load(path_trained_classifiers + classifier.replace(' ', '_') + ".joblib")
+    else:
+        ## TODO load with best_params first
+        # something like that
+        # classifiers = [
+        #      KNeighborsClassifier(**clf.best_params_),
+        #      SVC(**clf.best_params_),
+        #      SVC(**clf.best_params_),
+        #      GaussianProcessClassifier(**clf.best_params_),
+        #      DecisionTreeClassifier(**clf.best_params_),
+        #      RandomForestClassifier(**clf.best_params_),
+        #      MLPClassifier(**clf.best_params_),
+        #      GaussianNB(**clf.best_params_),
+        #      QuadraticDiscriminantAnalysis(**clf.best_params_)]
 
-    #clf = KNeighborsClassifier(**clf.best_params_)
-    #clf = SVC(**clf.best_params_)
-    #clf = GaussianProcessClassifier(**clf.best_params_)
-    #clf = DecisionTreeClassifier(**clf.best_params_)
-    #clf = RandomForestClassifier(**clf.best_params_)
-    clf = MLPClassifier(**clf.best_params_)
-    #clf = GaussianNB(**clf.best_params_)
-    #clf = QuadraticDiscriminantAnalysis(**clf.best_params_)
+        clf.fit(X_train, y_train)
 
-    # classifiers = [
-    #      KNeighborsClassifier(**clf.best_params_),
-    #      SVC(**clf.best_params_),
-    #      SVC(**clf.best_params_),
-    #      GaussianProcessClassifier(**clf.best_params_),
-    #      DecisionTreeClassifier(**clf.best_params_),
-    #      RandomForestClassifier(**clf.best_params_),
-    #      MLPClassifier(**clf.best_params_),
-    #      GaussianNB(**clf.best_params_),
-    #      QuadraticDiscriminantAnalysis(**clf.best_params_)]
 
-    clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
     score = clf.score(X_test, y_test)
     for (i, label) in enumerate(labels_old):
@@ -96,11 +91,14 @@ def main():
     title = classifier + ', trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
 
 
-    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title)
-    # TODO, also in plotting
+    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title, num_samples, dims)
+    # TODO with imgs_scatter_threshold
     # indices sind entweder random oder könnten zB den Datenpunkten entsprechen,
     # die am unsichersten klassifiziert wurden
-    # plotting.confidence_scatter(X_embedded, df, indices, title_imgs)
+    conf_threshold = 0.7
+    imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
+    title_imgs = "Images that were classified with a confidence below " str(conf_threshold)
+    plotting.image_scatter(X_embedded, df, indices, title_imgs)
 
 if __name__ == "__main__":
     main()
