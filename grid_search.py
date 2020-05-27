@@ -1,10 +1,11 @@
+# TODO allow for each classifier that classification confidence can later be extracted
+# TODO generalize so different datasets can be used
+
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 
 print(__doc__)
-
 import numpy as np
 import pandas as pd
-import argparse
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_moons, make_circles, make_classification
@@ -22,6 +23,19 @@ from sklearn import manifold, datasets
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
+
+
+classifier = None # If none is given from classifier_names, then gs is performed on all classifiers.
+num_samples = 2179 #at most 2179
+#num_samples = None
+dims = None
+dims_method = None
+#dims_method = 'pca'
+#dims_method = 'tsne'
+
+path_dataset = '' # TODO generalize so different datasets can be used
+path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
+path_best_params = 'classifiers_best_params' # specify where best parameters should be saved to
 
 
 def grid_search(X, y, classifier=None):
@@ -70,11 +84,11 @@ def grid_search(X, y, classifier=None):
         clf = GridSearchCV(classifiers[clf_index], parameters[clf_index], return_train_score=True)
         print(clf.fit(X, y))
         gs_classifiers.append(clf)
-        dump(clf, 'trained_classifiers/' + classifier.replace(' ', '_') + '.joblib')
-        dump(clf.best_params_, 'trained_classifiers/' + classifier.replace(' ', '_') + '_params.joblib')
+        dump(clf, path_trained_classifiers + classifier.replace(' ', '_') + '.joblib')
+        dump(clf.best_params_, path_best_params + classifier.replace(' ', '_') + '_params.joblib')
         print(pd.DataFrame.from_dict(clf.cv_results_))
-        print('>> DONE')
         print('The best parameters for ' +  classifier_names[clf_index] + ' are: ', clf.best_params_)
+        print('>> DONE')
 
     # perform grid search over all classifiers
     else:
@@ -82,12 +96,11 @@ def grid_search(X, y, classifier=None):
             clf = GridSearchCV(classifier, parameters[i], return_train_score=True)
             print(clf.fit(X, y))
             gs_classifiers.append(clf)
-            dump(clf, 'trained_classifiers/' + classifier_names[i].replace(' ', '_') + '.joblib')
-            dump(clf.best_params_, 'trained_classifiers/' + classifier_names[i].replace(' ', '_') + '_params.joblib')
+            dump(clf, path_trained_classifiers + classifier_names[i].replace(' ', '_') + '.joblib')
+            dump(clf.best_params_, path_best_params + classifier_names[i].replace(' ', '_') + '_params.joblib')
             print(pd.DataFrame.from_dict(clf.cv_results_))
-            print('>> DONE')
             print('The best parameters for ' +  classifier_names[i] + ' are: ', clf.best_params_)
-
+        print('>> DONE')
 
     return gs_classifiers
 
@@ -121,31 +134,22 @@ def dim_red(X, dims=2, init='pca'):
 
 def main():
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--classifier', default=None, help='If none is given from classifier_names, then gs is performed on all classifiers.')
-    parser.add_argument('--num_samples', type=int) #at most 2179
-    parser.add_argument('--dims', help='Number of dimensions the data should be reduced to before grid search')
-    parser.add_argument('--dims_method', help='Either pca or tsne')
-    args = parser.parse_args()
-
-    print('Look: ', args.num_samples)
     # load the data
     X = load_cupsnbottles.load_features('')
     df = load_cupsnbottles.load_properties('')
     y = np.array(df.label)
     #y = y.astype(int)
-    if args.num_samples:
-        X = X[:args.num_samples]
-        y = y[:args.num_samples]
+    if num_samples is not None:
+        X = X[:num_samples]
+        y = y[:num_samples]
 
-    if args.dims:
-        if args.dims_method:
-            X = dim_red(X, args.dims, args.dims_method)
+    if dims is not None:
+        if dims_method:
+            X = dim_red(X, dims, dims_method)
         else:
-            X = dim_red(X, args.dims)
+            X = dim_red(X, dims)
 
-    gs_classifiers = grid_search(X, y, args.classifier)
+    gs_classifiers = grid_search(X, y, classifier)
 
 
 if __name__ == "__main__":

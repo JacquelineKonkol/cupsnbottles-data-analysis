@@ -1,3 +1,7 @@
+# TODO für jeden Classifier dafür sorgen, dass er die probabilities rausgibt
+# TODO save fig
+# TODO include confusion matrix
+
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import cupsnbottles.img_scatter as img_scatter
 
@@ -18,8 +22,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
-
-# TODO für jeden Classifier dafür sorgen, dass er die probabilities rausgibt (oh, auch in grid_search)
 
 num_samples = 2179
 dims = 2
