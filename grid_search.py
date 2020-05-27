@@ -1,4 +1,3 @@
-# TODO allow for each classifier that classification confidence can later be extracted
 # TODO generalize so different datasets can be used
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
@@ -24,8 +23,10 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
 
+################################################################################
+####################################specify#####################################
 
-classifier = None # If none is given from classifier_names, then gs is performed on all classifiers.
+classifier = "RBF SVM" # If none is given from classifier_names, then gs is performed on all classifiers.
 num_samples = 2179 #at most 2179, default: None
 dims = None # number of dimensions to reduce to before training
 dims_method = None
@@ -35,6 +36,8 @@ dims_method = None
 path_dataset = '' # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
+
+################################################################################
 
 
 def grid_search(X, y, classifier=None):

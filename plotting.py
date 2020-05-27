@@ -1,8 +1,5 @@
-# TODO Aufruf der einzelnen classifier aufhübschen
-# TODO für jeden Classifier dafür sorgen, dass er die probabilities rausgibt
 # TODO save fig
 # TODO include confusion matrix
-# TODO confidence Balken zwischen 0 und 1 skalieren
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import cupsnbottles.img_scatter as img_scatter
@@ -10,6 +7,7 @@ import cupsnbottles.img_scatter as img_scatter
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import matplotlib.colors
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 from sklearn import manifold, model_selection
@@ -67,19 +65,6 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
 
     elif dims == 2:
 
-# -- should be removed if designated function is working
-
-        # add sample images into the plot
-        imgs_to_plot = 200
-        df = load_cupsnbottles.load_properties('cupsnbottles/')
-        inds = np.array(df.index)
-        random_inds = np.random.randint(0, len(y_gt), (imgs_to_plot))
-        imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
-        artists = img_scatter.imageScatter(X_embedded[random_inds, 0],
-                            X_embedded[random_inds, 1],imgs,img_scale=(13,13))
-        plt.show()
-# -- should be removed if designated function is working
-
         titles = ['Groundtruth', 'Predicted Labels', 'Difference', 'Confidence']
         fig, axes = plt.subplots(2, 2)
         fig.suptitle(fig_title)
@@ -107,17 +92,31 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
         return X_embedded
 
 
-########### TODO testen
-def image_scatter(X_embedded, df, imgs, indices, title):
+########### TODO
+def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba):
     """
     :param: X_embedded = should be 2D
     :param: df = dataframe containing the images load_properties
     :param: imgs = images to include into the scatterplot
     :param: indices = of the images to include
     """
+    #norm=plt.Normalize(-2,2)
+    #cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", ["red","violet","blue"])
+
+    #plt.scatter(x,y,c=c, cmap=cmap, norm=norm)
+    #plt.colorbar()
+    #plt.show()
+
+    #for i, img in enumerate(imgs):
+    #    col = pred_proba[indices[i]]
+    #    img = img_scatter.frameImage(img,col)
+
     fig = plt.figure()
     artists = img_scatter.imageScatter(X_embedded[indices, 0],
-                         X_embedded[indices, 1],imgs,img_scale=(13,13))
+                         X_embedded[indices, 1],imgs,img_scale=(20,20))
+
+
     fig.suptitle(title)
+    #plt.colorbar()
     plt.grid()
     plt.show()

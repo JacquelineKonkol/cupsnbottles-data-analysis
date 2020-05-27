@@ -1,6 +1,5 @@
 # TODO generalize so different datasets can be used
 # TODO falls vortrainierter Classifier: welche Testdaten sollen genommen werden?
-# TODO falls Classifier beste Parameter laden und mit diesen neu trainiert werden soll
 # TODO confusion Matrix verwenden
 # TODO img_scatter Sache? Vielleicht diejenigen Puntke, die falsch oder mit wenig confidence klassifiziert wurden darstellen?
 
@@ -25,14 +24,18 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import Pipeline
 
-"""specify"""
-classifier = 'Neural Net'
+################################################################################
+####################################specify#####################################
+
+classifier = "RBF SVM" # look up in classifier_names list
 use_pretrained_classifier = False
-imgs_scatter_threshold = True # uses a confidence threshold to decide what images to
+imgs_falsely_classified = True # uses a confidence threshold to decide what images to
                               # use in the scatterplot, random otherwise
 
-num_samples = 2179
+num_samples = 500
 dims = 2
 
 
@@ -40,9 +43,25 @@ path_dataset = '' # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # keep in mind that we don't want to test on data the model was trained on
 path_best_params = 'classifiers_best_params/'
 
+################################################################################
+
+classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
+                    "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA"]
+
+classifiers = [
+     KNeighborsClassifier(),
+     SVC(),
+     SVC(),
+     GaussianProcessClassifier(),
+     DecisionTreeClassifier(),
+     RandomForestClassifier(),
+     MLPClassifier(),
+     GaussianNB(),
+     QuadraticDiscriminantAnalysis()]
+
+
 def load_gt_data():
     X = load_cupsnbottles.load_features('cupsnbottles/')
-    print(X)
     df = load_cupsnbottles.load_properties('cupsnbottles/')
     y = np.array(df.label)
     labels_old = np.unique(y)
@@ -57,6 +76,7 @@ def load_gt_data():
 
 def main():
 
+
     X, y, labels_old, df = load_gt_data()
     X_train,X_test,y_train,y_test = model_selection.train_test_split(X,y,test_size=0.3)
 
@@ -64,19 +84,10 @@ def main():
         # load the desired trained classifier
         clf = load(path_trained_classifiers + classifier.replace(' ', '_') + ".joblib")
     else:
-        ## TODO load with best_params first
-        # something like that
-        # classifiers = [
-        #      KNeighborsClassifier(**clf.best_params_),
-        #      SVC(**clf.best_params_),
-        #      SVC(**clf.best_params_),
-        #      GaussianProcessClassifier(**clf.best_params_),
-        #      DecisionTreeClassifier(**clf.best_params_),
-        #      RandomForestClassifier(**clf.best_params_),
-        #      MLPClassifier(**clf.best_params_),
-        #      GaussianNB(**clf.best_params_),
-        #      QuadraticDiscriminantAnalysis(**clf.best_params_)]
-
+        # train anew with best model parameters
+        loaded_params = load(path_best_params + classifier.replace(' ', '_') + "_params.joblib")
+        clf = classifiers[classifier_names.index(classifier)]
+        clf.set_params(**loaded_params)
         clf.fit(X_train, y_train)
 
 
@@ -88,17 +99,26 @@ def main():
     pred_proba = clf.predict_proba(X_test)
     pred_proba = np.max(pred_proba, axis=1)
 
-    title = classifier + ', trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-
-
+    # plotting t-SNE
+    title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
     X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title, num_samples, dims)
-    # TODO with imgs_scatter_threshold
-    # indices sind entweder random oder könnten zB den Datenpunkten entsprechen,
-    # die am unsichersten klassifiziert wurden
-    conf_threshold = 0.7
-    imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
-    title_imgs = "Images that were classified with a confidence below " str(conf_threshold)
-    plotting.image_scatter(X_embedded, df, indices, title_imgs)
+
+    inds = np.array(df.index)
+    indices = None
+
+    if imgs_falsely_classified:
+        indices = np.argwhere(y_pred != y_test).flatten()
+        print(indices)
+
+        title_imgs = 'Images that were falsely classified by ' + classifier
+    # plot random images into the scatter
+    else:
+        imgs_to_plot = 20
+        indices = np.random.randint(0, len(y_test), (imgs_to_plot))
+        title_imgs = str(imgs_to_plot) + ' random images'
+
+    imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[indices])
+    plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba)
 
 if __name__ == "__main__":
     main()
