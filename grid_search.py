@@ -35,7 +35,7 @@ dims_method = None
 
 path_dataset = '' # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
-path_best_params = 'classifiers_best_params' # specify where best parameters should be saved to
+path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
 
 
 def grid_search(X, y, classifier=None):
@@ -54,8 +54,8 @@ def grid_search(X, y, classifier=None):
     # can be adjusted
     parameters = [
         {'n_neighbors': [2, 5, 10], 'weights': ['uniform', 'distance'], 'algorithm': ['auto', 'brute']}, # K Nearest Neighbors
-        {'kernel':['linear'], 'C': [1, 5, 10]}, # Linear SVM
-        {'kernel':['rbf'], 'C':[1, 5, 10]}, # RBF SVM
+        {'kernel':['linear'], 'C': [1, 5, 10], 'probability': [True]}, # Linear SVM (predict_proba with Platt scaling)
+        {'kernel':['rbf'], 'C':[1, 5, 10], 'probability': [True]}, # RBF SVM (predict_proba with Platt scaling)
         {}, # Gaussian Process
         {'max_depth':[None, 5, 10], 'min_samples_split': [2, 5, 10]}, # Decision Tree
         {'max_depth':[None, 5, 10], 'n_estimators':[10, 50, 100], 'max_features':[1]}, # Random Forest

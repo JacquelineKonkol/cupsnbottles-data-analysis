@@ -1,6 +1,8 @@
+# TODO Aufruf der einzelnen classifier aufhübschen
 # TODO für jeden Classifier dafür sorgen, dass er die probabilities rausgibt
 # TODO save fig
 # TODO include confusion matrix
+# TODO confidence Balken zwischen 0 und 1 skalieren
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import cupsnbottles.img_scatter as img_scatter
@@ -25,15 +27,18 @@ from sklearn.decomposition import PCA
 
 num_samples = 2179
 dims = 2
-#classifier = 'trained_classifiers/Nearest_Neighbors.joblib'
-#classifier = 'trained_classifiers/Linear_SVM.joblib' # fix probability = False
-#classifier = 'trained_classifiers/Nearest_Neighbors.joblib'
-#classifier = 'trained_classifiers/Gaussian_Process.joblib'
-#classifier = 'trained_classifiers/Random_Forest.joblib'
-classifier = 'trained_classifiers/Neural_Net.joblib'
+classifier = 'Neural Net'
 
-def t_sne(X, y_gt, y_pred, pred_proba, labels_old, fig_title, perplexity=30, learning_rate=200.0):
-    ''' for the 2d and 3d case adds a visualization '''
+path_trained_classifiers = 'trained_classifiers/'
+
+def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, perplexity=30, learning_rate=200.0):
+    """
+    nD case: returns data embedded into n dimensions using t_sne
+    3D case: simple t-SNE 3D plot with gt labels
+    2D case: t-SNE plot with gt labels, with predicted labels, the difference between
+             the two and the classification confidence for each prediction
+    :returns: embedded data in n-dim
+    """
 
     colors = np.array(["black", "grey", "orange", "darkred", "orchid",
                        "lime", "lightgrey", "red", "green", "#bcbd22", "c"])
@@ -67,16 +72,18 @@ def t_sne(X, y_gt, y_pred, pred_proba, labels_old, fig_title, perplexity=30, lea
 
     elif dims == 2:
 
+# -- should be removed if designated function is working
+
         # add sample images into the plot
         imgs_to_plot = 200
-        df = load_cupsnbottles.load_properties('')
+        df = load_cupsnbottles.load_properties('cupsnbottles/')
         inds = np.array(df.index)
         random_inds = np.random.randint(0, len(y_gt), (imgs_to_plot))
-        imgs = load_cupsnbottles.load_images('', inds[random_inds])
+        imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
         artists = img_scatter.imageScatter(X_embedded[random_inds, 0],
                             X_embedded[random_inds, 1],imgs,img_scale=(13,13))
         plt.show()
-
+# -- should be removed if designated function is working
 
         titles = ['Groundtruth', 'Predicted Labels', 'Difference', 'Confidence']
         fig, axes = plt.subplots(2, 2)
@@ -104,9 +111,37 @@ def t_sne(X, y_gt, y_pred, pred_proba, labels_old, fig_title, perplexity=30, lea
     else:
         return X_embedded
 
+
+########### TODO testen
+def confidence_scatter(X_embedded, df, imgs, indices, title):
+    """
+    :param: X_embedded = should be 2D
+    :param: df = dataframe containing the images load_properties
+    :param: imgs = images to include into the scatterplot
+    :param: indices = of the images to include
+    """
+    fig = plt.figure()
+    artists = img_scatter.imageScatter(X_embedded[indices, 0],
+                         X_embedded[indices, 1],imgs,img_scale=(13,13))
+    fig.suptitle(title)
+    plt.grid()
+    plt.show()
+
+    # add sample images into the scatter plot
+    # imgs_to_plot = 200
+    ## df = load_cupsnbottles.load_properties('cupsnbottles/')
+    ## inds = np.array(df.index)
+    ## random_inds = np.random.randint(0, len(y_gt), (imgs_to_plot))
+    ## imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
+    # artists = img_scatter.imageScatter(X_embedded[random_inds, 0],
+    #                     X_embedded[random_inds, 1],imgs,img_scale=(13,13))
+    # plt.show()
+    pass
+
 def load_gt_data():
-    X = load_cupsnbottles.load_features('')
-    df = load_cupsnbottles.load_properties('')
+    X = load_cupsnbottles.load_features('cupsnbottles/')
+    print(X)
+    df = load_cupsnbottles.load_properties('cupsnbottles/')
     y = np.array(df.label)
     labels_old = np.unique(y)
     for (i, label) in enumerate(labels_old):
@@ -122,7 +157,7 @@ X, y, labels_old = load_gt_data()
 X_train,X_test,y_train,y_test = model_selection.train_test_split(X,y,test_size=0.3)
 
 # load the desired classifier
-clf = load(str(classifier))
+clf = load(path_trained_classifiers + classifier.replace(' ', '_') + ".joblib")
 
 #clf = KNeighborsClassifier(**clf.best_params_)
 #clf = SVC(**clf.best_params_)
@@ -133,6 +168,17 @@ clf = MLPClassifier(**clf.best_params_)
 #clf = GaussianNB(**clf.best_params_)
 #clf = QuadraticDiscriminantAnalysis(**clf.best_params_)
 
+classifiers = [
+     KNeighborsClassifier(**clf.best_params_),
+     SVC(**clf.best_params_),
+     SVC(**clf.best_params_),
+     GaussianProcessClassifier(**clf.best_params_),
+     DecisionTreeClassifier(**clf.best_params_),
+     RandomForestClassifier(**clf.best_params_),
+     MLPClassifier(**clf.best_params_),
+     GaussianNB(**clf.best_params_),
+     QuadraticDiscriminantAnalysis(**clf.best_params_)]
+
 clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 score = clf.score(X_test, y_test)
@@ -142,15 +188,7 @@ y_pred = y_pred.astype(int)
 pred_proba = clf.predict_proba(X_test)
 pred_proba = np.max(pred_proba, axis=1)
 
-#title = "Nearest Neighbors, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-#title = "Linear SVM, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-#title = "RBF SVM, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-#title = "Gaussian Process, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-#title = "Decision Tree, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-#title = "Random Forest, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-title = "Neural Net, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-#title = "Naive Bayes, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
-#title = "QDA, trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
+title = classifier + ', trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
 
 
-_ = t_sne(X_test, y_test, y_pred, pred_proba, labels_old, title)
+X_embedded = t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title)
