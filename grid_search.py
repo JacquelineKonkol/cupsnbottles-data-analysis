@@ -25,7 +25,7 @@ from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
 
 
-classifier = None # If none is given from classifier_names, then gs is performed on all classifiers.
+classifier = "Nearest Neighbors" # If none is given from classifier_names, then gs is performed on all classifiers.
 num_samples = 2179 #at most 2179, default: None
 dims = None # number of dimensions to reduce to before training
 dims_method = None
@@ -85,11 +85,13 @@ def grid_search(X, y, classifier=None):
         gs_classifiers.append(clf)
         dump(clf, path_trained_classifiers + classifier.replace(' ', '_') + '.joblib')
         dump(clf.best_params_, path_best_params + classifier.replace(' ', '_') + '_params.joblib')
-        print(pd.DataFrame.from_dict(clf.cv_results_))
+        result_df = pd.DataFrame.from_dict(clf.cv_results_)
+        result_df.insert(len(result_df.columns)-1, "Params", clf.cv_results_['params'], True)
+        print(reuslt_df)
         print('The best parameters for ' +  classifier_names[clf_index] + ' are: ', clf.best_params_)
         print('>> DONE')
 
-    # perform grid search over all classifiers
+    # perform grid search over all classifier
     else:
         for i, classifier in enumerate(classifiers):
             clf = GridSearchCV(classifier, parameters[i], return_train_score=True)
@@ -97,7 +99,9 @@ def grid_search(X, y, classifier=None):
             gs_classifiers.append(clf)
             dump(clf, path_trained_classifiers + classifier_names[i].replace(' ', '_') + '.joblib')
             dump(clf.best_params_, path_best_params + classifier_names[i].replace(' ', '_') + '_params.joblib')
-            print(pd.DataFrame.from_dict(clf.cv_results_))
+            result_df = pd.DataFrame.from_dict(clf.cv_results_)
+            result_df.insert(len(result_df.columns) - 1, "Params", clf.cv_results_['params'], True)
+            print(result_df)
             print('The best parameters for ' +  classifier_names[i] + ' are: ', clf.best_params_)
         print('>> DONE')
 

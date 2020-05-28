@@ -1,7 +1,6 @@
 # TODO generalize so different datasets can be used
 # TODO falls vortrainierter Classifier: welche Testdaten sollen genommen werden?
 # TODO falls Classifier beste Parameter laden und mit diesen neu trainiert werden soll
-# TODO confusion Matrix verwenden
 # TODO img_scatter Sache? Vielleicht diejenigen Puntke, die falsch oder mit wenig confidence klassifiziert wurden darstellen?
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
@@ -25,10 +24,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
+from sklearn import metrics
 
 """specify"""
 classifier = 'Neural Net'
-use_pretrained_classifier = False
+use_pretrained_classifier = True
 imgs_scatter_threshold = True # uses a confidence threshold to decide what images to
                               # use in the scatterplot, random otherwise
 
@@ -58,7 +58,7 @@ def load_gt_data():
 def main():
 
     X, y, labels_old, df = load_gt_data()
-    X_train,X_test,y_train,y_test = model_selection.train_test_split(X,y,test_size=0.3)
+    X_train,X_test,y_train,y_test = model_selection.train_test_split(X, y, test_size=0.33, random_state=42)
 
     if use_pretrained_classifier:
         # load the desired trained classifier
@@ -88,17 +88,23 @@ def main():
     pred_proba = clf.predict_proba(X_test)
     pred_proba = np.max(pred_proba, axis=1)
 
-    title = classifier + ', trained on " + str(len(X_train)) + ' samples. Score: ' + str(score)
+    title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
 
 
     X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title, num_samples, dims)
+
+    cm = metrics.confusion_matrix(y_test, y_pred)
+    plotting.plot_confusion_matrix(cm, classes=labels_old, cmap=plt.cm.Greens)
+    plotting.plot_confusion_matrix(cm, classes=labels_old, normalize=True, title='Normalized confusion matrix', cmap=plt.cm.Greens)
+
     # TODO with imgs_scatter_threshold
     # indices sind entweder random oder könnten zB den Datenpunkten entsprechen,
     # die am unsichersten klassifiziert wurden
     conf_threshold = 0.7
     imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
-    title_imgs = "Images that were classified with a confidence below " str(conf_threshold)
+    title_imgs = "Images that were classified with a confidence below " + str(conf_threshold)
     plotting.image_scatter(X_embedded, df, indices, title_imgs)
+
 
 if __name__ == "__main__":
     main()
