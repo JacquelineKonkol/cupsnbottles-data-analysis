@@ -1,4 +1,3 @@
-# TODO allow for each classifier that classification confidence can later be extracted
 # TODO generalize so different datasets can be used
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
@@ -25,8 +24,11 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
 
+################################################################################
+####################################specify#####################################
 
 classifier = "Nearest Neighbors" # If none is given from classifier_names, then gs is performed on all classifiers.
+
 num_samples = 2179 #at most 2179, default: None
 dims = None # number of dimensions to reduce to before training
 dims_method = None
@@ -36,6 +38,8 @@ dims_method = None
 path_dataset = '' # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
+
+################################################################################
 
 
 def grid_search(X, y, classifier=None):
@@ -88,7 +92,7 @@ def grid_search(X, y, classifier=None):
         dump(clf.best_params_, path_best_params + classifier.replace(' ', '_') + '_params.joblib')
         result_df = pd.DataFrame.from_dict(clf.cv_results_)
         result_df.insert(len(result_df.columns)-1, "Params", clf.cv_results_['params'], True)
-        print(reuslt_df)
+        print(result_df)
         print('The best parameters for ' +  classifier_names[clf_index] + ' are: ', clf.best_params_)
         print('>> DONE')
 
