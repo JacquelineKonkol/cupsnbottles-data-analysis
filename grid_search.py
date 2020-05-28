@@ -2,6 +2,7 @@
 # TODO generalize so different datasets can be used
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
+import tools.basics as tools
 
 print(__doc__)
 import numpy as np
@@ -108,18 +109,6 @@ def grid_search(X, y, classifier=None):
     return gs_classifiers
 
 
-
-
-def t_sne(dims, perplexity=30, learning_rate=200.0):
-    """
-    Calls t-SNE dimension reduction with default parameters. Can be adjusted.
-    """
-    tsne = manifold.TSNE(n_components=dims, init='random', perplexity=perplexity,
-                         learning_rate = learning_rate,
-                         n_iter=1000, n_iter_without_progress=300, method='barnes_hut',
-                         random_state=0)
-    return tsne.fit_transform(X)
-
 def dim_red(X, dims=2, init='pca'):
     """
     :param: X = dataset
@@ -131,20 +120,14 @@ def dim_red(X, dims=2, init='pca'):
         X_embedded = pca.fit_transform(X)
 
     elif init == 'tsne':
-        X_embedded = t_sne(dims)
+        X_embedded = tools.t_sne(X, dims)
     return X_embedded
 
 
 def main():
-
+    #X, y, label_names, df = tools.load_gt_data(num_samples)
     # load the data
-    X = load_cupsnbottles.load_features('cupsnbottles/')
-    df = load_cupsnbottles.load_properties('cupsnbottles/')
-    y = np.array(df.label)
-    #y = y.astype(int)
-    if num_samples is not None:
-        X = X[:num_samples]
-        y = y[:num_samples]
+    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples)
 
     if dims is not None:
         if dims_method:
