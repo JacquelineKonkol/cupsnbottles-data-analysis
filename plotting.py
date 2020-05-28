@@ -24,7 +24,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
 
 
-def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, dims=2, perplexity=30, learning_rate=200.0):
+def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, classifier, dims=2, perplexity=30, learning_rate=200.0):
     """
     nD case: returns data embedded into n dimensions using t_sne
     3D case: simple t-SNE 3D plot with gt labels
@@ -48,6 +48,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
     X_embedded = tsne.fit_transform(X)
 
     if dims == 3:
+        # right now visualizes only gt
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         x_co = np.expand_dims(X_embedded[:, 0], 1)
@@ -66,8 +67,8 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
     elif dims == 2:
 
         titles = ['Groundtruth', 'Predicted Labels', 'Difference', 'Confidence']
-        fig, axes = plt.subplots(2, 2)
-        fig.suptitle(fig_title)
+        fig, axes = plt.subplots(2, 2, figsize=(15,10))
+        fig.suptitle(fig_title, fontsize=20)
         for i, ax in enumerate(axes.reshape(-1)):
             ax.set_title(titles[i])
             #ax.set_xticks([])
@@ -85,6 +86,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
             axes[0][1].scatter([], [], marker='.', label=label, color=colors[i])
         axes[0][1].legend(loc = 'upper right', bbox_to_anchor = (1.45, 1.2))
         plt.tight_layout()
+        fig.savefig('plots/' + classifier.replace(' ', '_') + '.png', bbox_inches='tight')
         plt.show()
 
         return X_embedded
@@ -93,7 +95,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
 
 
 ########### TODO
-def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba):
+def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba, classifier):
     """
     :param: X_embedded = should be 2D
     :param: df = dataframe containing the images load_properties
@@ -108,15 +110,18 @@ def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba):
     #plt.show()
 
     #for i, img in enumerate(imgs):
-    #    col = pred_proba[indices[i]]
-    #    img = img_scatter.frameImage(img,col)
+#        img = np.asarray(img)
+    #    print(img)
+#        col = pred_proba[indices[i]]
+#        img = img_scatter.frameImage(img,col)
 
     fig = plt.figure()
     artists = img_scatter.imageScatter(X_embedded[indices, 0],
                          X_embedded[indices, 1],imgs,img_scale=(20,20))
 
 
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=20)
     #plt.colorbar()
     plt.grid()
+    fig.savefig('plots/' + classifier.replace(' ', '_') + '_imgs_scatter.png')
     plt.show()

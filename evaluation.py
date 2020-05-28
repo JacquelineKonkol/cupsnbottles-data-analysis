@@ -1,7 +1,7 @@
 # TODO generalize so different datasets can be used
 # TODO falls vortrainierter Classifier: welche Testdaten sollen genommen werden?
 # TODO confusion Matrix verwenden
-# TODO img_scatter Sache? Vielleicht diejenigen Puntke, die falsch oder mit wenig confidence klassifiziert wurden darstellen?
+# TODO Option, neu trainierten Classifier zu speichern?
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import plotting
@@ -30,14 +30,13 @@ from sklearn.pipeline import Pipeline
 ################################################################################
 ####################################specify#####################################
 
-classifier = "RBF SVM" # look up in classifier_names list
+classifier = "QDA" # look up in classifier_names list
 use_pretrained_classifier = False
-imgs_falsely_classified = True # uses a confidence threshold to decide what images to
-                              # use in the scatterplot, random otherwise
+imgs_falsely_classified = True # only misclassified images are used in
+                               # the scatterplot, random otherwise
 
-num_samples = 500
+num_samples = 2179 # 2179 at most
 dims = 2
-
 
 path_dataset = '' # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # keep in mind that we don't want to test on data the model was trained on
@@ -76,9 +75,8 @@ def load_gt_data():
 
 def main():
 
-
     X, y, labels_old, df = load_gt_data()
-    X_train,X_test,y_train,y_test = model_selection.train_test_split(X,y,test_size=0.3)
+    X_train,X_test,y_train,y_test = model_selection.train_test_split(X,y,test_size=0.3, random_state=1)
 
     if use_pretrained_classifier:
         # load the desired trained classifier
@@ -101,14 +99,14 @@ def main():
 
     # plotting t-SNE
     title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
-    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title, num_samples, dims)
+    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, labels_old, title, num_samples, classifier, dims)
 
     inds = np.array(df.index)
     indices = None
 
+    # plot only misclassifications
     if imgs_falsely_classified:
         indices = np.argwhere(y_pred != y_test).flatten()
-        print(indices)
 
         title_imgs = 'Images that were falsely classified by ' + classifier
     # plot random images into the scatter
@@ -118,7 +116,7 @@ def main():
         title_imgs = str(imgs_to_plot) + ' random images'
 
     imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[indices])
-    plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba)
+    plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
 
 if __name__ == "__main__":
     main()
