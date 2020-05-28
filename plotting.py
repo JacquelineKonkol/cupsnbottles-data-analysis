@@ -6,6 +6,7 @@
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import cupsnbottles.img_scatter as img_scatter
+import tools.basics as tools
 
 import itertools
 import numpy as np
@@ -13,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
-from sklearn import manifold, model_selection
+from sklearn import model_selection
 from joblib import dump, load
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -29,6 +30,7 @@ from sklearn.metrics import confusion_matrix
 
 
 def plot_confusion_matrix(cm, classes,
+                          img_name,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
@@ -54,10 +56,11 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.savefig("./plots/conf_matrix_" + img_name)
     plt.show()
 
 
-def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, dims=2, perplexity=30, learning_rate=200.0):
+def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, img_name, dims=2, perplexity=30, learning_rate=200.0):
     """
     nD case: returns data embedded into n dimensions using t_sne
     3D case: simple t-SNE 3D plot with gt labels
@@ -74,11 +77,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
     diff_colors[pred_colors != gt_colors] = 'red'
     plotcolors = [gt_colors, pred_colors, diff_colors]
 
-    tsne = manifold.TSNE(n_components=dims, init='random', perplexity=perplexity,
-                         learning_rate = learning_rate,
-                         n_iter=1000, n_iter_without_progress=300, method='barnes_hut',
-                         random_state=0)
-    X_embedded = tsne.fit_transform(X)
+    X_embedded = tools.t_sne(X)
 
     if dims == 3:
         fig = plt.figure()
@@ -92,6 +91,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
                        marker='.', label=label, color=colors[i])
         plt.legend()
         plt.grid()
+        plt.savefig("./plots/t-sne_3dim_" + img_name)
         plt.show()
 
         return X_embedded
@@ -108,6 +108,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
         imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[random_inds])
         artists = img_scatter.imageScatter(X_embedded[random_inds, 0],
                             X_embedded[random_inds, 1],imgs,img_scale=(13,13))
+        plt.savefig("./plots/t-sne_2dim_" + img_name)
         plt.show()
 # -- should be removed if designated function is working
 
@@ -131,6 +132,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
             axes[0][1].scatter([], [], marker='.', label=label, color=colors[i])
         axes[0][1].legend(loc = 'upper right', bbox_to_anchor = (1.45, 1.2))
         plt.tight_layout()
+        plt.savefig("./plots/vis_" + img_name)
         plt.show()
 
         return X_embedded

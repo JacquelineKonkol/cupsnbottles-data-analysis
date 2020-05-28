@@ -1,19 +1,11 @@
 import numpy as np
-import load_cupsnbottles
+import cupsnbottles.load_cupsnbottles as load_cupsnbottles
+import tools.basics as tools
 import argparse
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import manifold
-
-
-def t_sne(X, perplexity=30, learning_rate=200.0, n_iter=1000):
-    tsne = manifold.TSNE(n_components=2, init='random', perplexity=perplexity,
-                         learning_rate = learning_rate,
-                         n_iter=n_iter, n_iter_without_progress=300, method='barnes_hut',
-                         random_state=0)
-    X_embedded = tsne.fit_transform(X)
-    return X_embedded
 
 
 num_samples = 2179 #2179 at most
@@ -42,7 +34,7 @@ fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, h
 
 for i, learning_rate in enumerate(learning_rates):
     for j, perplexity in enumerate(perplexities):
-        X_embedded = t_sne(X, perplexity, n_iter=learning_rate)
+        X_embedded = tools.t_sne(X, perplexity, n_iter=learning_rate)
         axs[i][j].scatter(X_embedded[:, 0], X_embedded[:, 1], marker='.', color=plotcolors)
         axs[i][j].set_title('p: ' + str(perplexity) + ', lr: '+str(learning_rate),fontsize=8)
         axs[i][j].set_yticklabels([])
@@ -53,4 +45,5 @@ for i, learning_rate in enumerate(learning_rates):
 for (i, label) in enumerate(labels_old):
     axs[len(learning_rates)-1][len(perplexities)-1].scatter([], [], marker='.', label=label, color=colors[i])
 plt.legend(loc = 'upper right', bbox_to_anchor = (1.8, 3.5))
+plt.savefig("./plots/t-sne_iteration")
 plt.show()

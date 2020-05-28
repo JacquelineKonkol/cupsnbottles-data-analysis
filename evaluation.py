@@ -83,11 +83,11 @@ def main():
     title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
 
 
-    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples, dims)
+    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples,"cupsnbottles", dims)
 
     cm = metrics.confusion_matrix(y_test, y_pred)
-    plotting.plot_confusion_matrix(cm, classes=label_names, cmap=plt.cm.Greens)
-    plotting.plot_confusion_matrix(cm, classes=label_names, normalize=True, title='Normalized confusion matrix', cmap=plt.cm.Greens)
+    plotting.plot_confusion_matrix(cm,classes=label_names, img_name="absolute_cupsnbottles", cmap=plt.cm.Greens)
+    plotting.plot_confusion_matrix(cm, classes=label_names, img_name="norm_cupsnbottles", normalize=True, title='Normalized confusion matrix', cmap=plt.cm.Greens)
 
     # TODO with imgs_scatter_threshold
     # indices sind entweder random oder könnten zB den Datenpunkten entsprechen,
