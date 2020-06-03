@@ -39,7 +39,43 @@ path_dataset = '' # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
 
+classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
+          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA"]
+
+# can be adjusted
+parameters = [
+    {'n_neighbors': [2, 5, 10], 'weights': ['uniform', 'distance'], 'algorithm': ['auto', 'brute']}, # K Nearest Neighbors
+    {'kernel':['linear'], 'C': [1, 5, 10], 'probability': [True]}, # Linear SVM (predict_proba with Platt scaling)
+    {'kernel':['rbf'], 'C':[1, 5, 10], 'probability': [True]}, # RBF SVM (predict_proba with Platt scaling)
+    {}, # Gaussian Process
+    {'max_depth':[None, 5, 10], 'min_samples_split': [2, 5, 10]}, # Decision Tree
+    {'max_depth':[None, 5, 10], 'n_estimators':[10, 50, 100], 'max_features':[1]}, # Random Forest
+    {'alpha': [0.0001, 0.001], 'max_iter': [1000, 2000]}, # Neural Net
+    {}, # Naive Bayes
+    #{'var_smoothing': [1e-9]}, # Naive Bayes this does not work eventough it's the default value
+    {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}] # Quadratic Discriminant Analysis
+
+classifiers = [
+     KNeighborsClassifier(),
+     SVC(),
+     SVC(),
+     GaussianProcessClassifier(),
+     DecisionTreeClassifier(),
+     RandomForestClassifier(),
+     MLPClassifier(),
+     GaussianNB(),
+     QuadraticDiscriminantAnalysis()]
+
+
 ################################################################################
+def save_grid_search_results(clf, classifier_name):
+    result_df = pd.DataFrame.from_dict(clf.cv_results_)
+    result_df.insert(0, "Params", clf.cv_results_['params'], True)
+    result_df.to_csv("classifiers_best_params\grid_search_" + classifier_name.replace(' ', '_') + ".csv", sep=";", index=False)
+    dump(clf, path_trained_classifiers + classifier.replace(' ', '_') + '.joblib')
+    dump(clf.best_params_, path_best_params + classifier.replace(' ', '_') + '_params.joblib')
+
+    print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_)
 
 
 def grid_search(X, y, classifier=None):
@@ -52,62 +88,24 @@ def grid_search(X, y, classifier=None):
     :returns: trained classifier (or list of those) with best parameters
     """
 
-    classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA"]
-
-    # can be adjusted
-    parameters = [
-        {'n_neighbors': [2, 5, 10], 'weights': ['uniform', 'distance'], 'algorithm': ['auto', 'brute']}, # K Nearest Neighbors
-        {'kernel':['linear'], 'C': [1, 5, 10], 'probability': [True]}, # Linear SVM (predict_proba with Platt scaling)
-        {'kernel':['rbf'], 'C':[1, 5, 10], 'probability': [True]}, # RBF SVM (predict_proba with Platt scaling)
-        {}, # Gaussian Process
-        {'max_depth':[None, 5, 10], 'min_samples_split': [2, 5, 10]}, # Decision Tree
-        {'max_depth':[None, 5, 10], 'n_estimators':[10, 50, 100], 'max_features':[1]}, # Random Forest
-        {'alpha': [0.0001, 0.001], 'max_iter': [1000, 2000]}, # Neural Net
-        {}, # Naive Bayes
-        #{'var_smoothing': [1e-9]}, # Naive Bayes this does not work eventough it's the default value
-        {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}] # Quadratic Discriminant Analysis
-
-    classifiers = [
-         KNeighborsClassifier(),
-         SVC(),
-         SVC(),
-         GaussianProcessClassifier(),
-         DecisionTreeClassifier(),
-         RandomForestClassifier(),
-         MLPClassifier(),
-         GaussianNB(),
-         QuadraticDiscriminantAnalysis()]
-
-
     gs_classifiers = []
 
     # perform grid search over specified classifier
     if classifier is not None:
         clf_index = classifier_names.index(classifier)
         clf = GridSearchCV(classifiers[clf_index], parameters[clf_index], return_train_score=True)
-        print(clf.fit(X, y))
+        clf.fit(X, y)
         gs_classifiers.append(clf)
-        dump(clf, path_trained_classifiers + classifier.replace(' ', '_') + '.joblib')
-        dump(clf.best_params_, path_best_params + classifier.replace(' ', '_') + '_params.joblib')
-        result_df = pd.DataFrame.from_dict(clf.cv_results_)
-        result_df.insert(len(result_df.columns)-1, "Params", clf.cv_results_['params'], True)
-        print(result_df)
-        print('The best parameters for ' +  classifier_names[clf_index] + ' are: ', clf.best_params_)
+        save_grid_search_results(clf, classifier)
         print('>> DONE')
 
     # perform grid search over all classifier
     else:
         for i, classifier in enumerate(classifiers):
             clf = GridSearchCV(classifier, parameters[i], return_train_score=True)
-            print(clf.fit(X, y))
+            clf.fit(X, y)
             gs_classifiers.append(clf)
-            dump(clf, path_trained_classifiers + classifier_names[i].replace(' ', '_') + '.joblib')
-            dump(clf.best_params_, path_best_params + classifier_names[i].replace(' ', '_') + '_params.joblib')
-            result_df = pd.DataFrame.from_dict(clf.cv_results_)
-            result_df.insert(len(result_df.columns) - 1, "Params", clf.cv_results_['params'], True)
-            print(result_df)
-            print('The best parameters for ' +  classifier_names[i] + ' are: ', clf.best_params_)
+            save_grid_search_results(clf, classifier_names[i])
         print('>> DONE')
 
     return gs_classifiers
@@ -129,7 +127,6 @@ def dim_red(X, dims=2, init='pca'):
 
 
 def main():
-    #X, y, label_names, df = tools.load_gt_data(num_samples)
     # load the data
     X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples)
 
