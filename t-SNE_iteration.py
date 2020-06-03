@@ -1,49 +1,47 @@
-import numpy as np
-import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import tools.basics as tools
-import argparse
+
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn import manifold
+import itertools
+import pandas as pd
+import seaborn as sns
 
 
 num_samples = 2179 #2179 at most
-X = load_cupsnbottles.load_features('')
-df = load_cupsnbottles.load_properties('')
-y = np.array(df.label)
-labels_old = np.unique(y)
-for (i, label) in enumerate(labels_old):
-    y[y == label] = i
-y = y.astype(int)
-X = X[:num_samples]
 
 # parameters to iterate over
-perplexities = [5, 10, 20, 30, 50]
-learning_rates = [10.0, 200.0, 500.0]
-n_iters = [250, 1000, 5000, 10000]
+t_sne_params = {
+    "perplexities" : [30, 70, 100],
+    "learning_rates" : [10.0, 200.0, 500.0],
+    "n_iters" : [250, 1000, 5000]
+}
 
-# plotting
-colors = np.array(["black", "grey", "orange", "darkred", "orchid",
-                   "lime", "lightgrey", "red", "green", "#bcbd22", "c"])
-plotcolors = colors[y[:num_samples]]
-fig = plt.figure(figsize=(20,30))
-axs = fig.subplots(len(learning_rates), len(perplexities))
-fig.suptitle('Iteration through perplexities (p) and learning_rates (lr)')
-fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=None)
+# TODO: Einheitliches Plotting + Umzug in plotting
+def plot_reduced_X(X_reduced, y_label, fname):
+    df = pd.DataFrame({'x': X_reduced[:, 0], 'y': X_reduced[:, 1], 'label': y_label})
 
-for i, learning_rate in enumerate(learning_rates):
-    for j, perplexity in enumerate(perplexities):
-        X_embedded = tools.t_sne(X, perplexity, n_iter=learning_rate)
-        axs[i][j].scatter(X_embedded[:, 0], X_embedded[:, 1], marker='.', color=plotcolors)
-        axs[i][j].set_title('p: ' + str(perplexity) + ', lr: '+str(learning_rate),fontsize=8)
-        axs[i][j].set_yticklabels([])
-        axs[i][j].set_xticklabels([])
-        axs[i][j].xaxis.set_ticks_position('none')
-        axs[i][j].yaxis.set_ticks_position('none')
-        axs[i][j].grid()
-for (i, label) in enumerate(labels_old):
-    axs[len(learning_rates)-1][len(perplexities)-1].scatter([], [], marker='.', label=label, color=colors[i])
-plt.legend(loc = 'upper right', bbox_to_anchor = (1.8, 3.5))
-plt.savefig("./plots/t-sne_iteration")
-plt.show()
+    # draw the plot in appropriate place in the grid
+    colors = ['#000000', '#023eff', '#ff7c00', '#1ac938', '#e8000b', '#8b2be2', '#9f4800', '#f14cc1', '#a3a3a3',
+              '#ffc400', '#00d7ff']
+    palette = sns.set_palette(sns.color_palette(colors))
+    sns.lmplot(data=df, x='x', y='y', hue='label', fit_reg=False, size=10,
+               markers=['^', 'v', 's', 'o', '1', '2', "p", "*", "+", "x", "D"])
+    plt.title(fname, pad=1.0)
+    print('saving this plot as image in present working directory...')
+    plt.savefig("./plots/t-sne/" + fname)
+    plt.show()
+
+def grid_search_t_sne(X, y):
+    for params in itertools.product(*t_sne_params.values(), repeat=1):
+        perplexity, learning_rate, n_iter = params
+        X_embedded = tools.t_sne(X,perplexity=perplexity, learning_rate=learning_rate, n_iter=n_iter)
+        fname = "perplexity_" + str(perplexity).replace(".", "p") + "_learning_rate_" + str(learning_rate).replace(".", "p") + "_n_iter_" + str(n_iter).replace(".", "p")
+        plot_reduced_X(X_embedded, y, fname)
+
+
+def main():
+    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples)
+    grid_search_t_sne(X, y)
+    print(list(itertools.product(*t_sne_params.values(), repeat=1)))
+
+if __name__ == "__main__":
+    main()

@@ -4,7 +4,6 @@ from sklearn import manifold
 
 def load_gt_data(num_samples:int, path="cupsnbottles/" ):
     X = load_cupsnbottles.load_features(path)
-    print(X)
     df = load_cupsnbottles.load_properties(path)
     y = np.array(df.label)
     y_encoded = y.copy()

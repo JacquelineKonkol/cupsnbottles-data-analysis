@@ -1,5 +1,4 @@
-# TODO save fig
-# TODO include confusion matrix
+# TODO Umzug in tools
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import cupsnbottles.img_scatter as img_scatter
