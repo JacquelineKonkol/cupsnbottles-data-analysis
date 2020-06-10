@@ -4,14 +4,16 @@ from sklearn import manifold
 import os
 import pickle as pkl
 import pandas as pd
+from PIL import Image
 
+# preliminary, data format will change
+# TODO num_samples noch einbauen, oder entfernen?
 def load_gt_data(num_samples:int, path="cupsnbottles/" ):
 
     if path is not 'cupsnbottles/':
         X = open_pkl(path, 'features.pkl')
         label_names = ['Can01', 'Can02', 'Can03', 'Coke001', 'Coke002Cup', 'WaterBottle']
 
-        #TODO num_samples noch einbauen
         filenames = open_pkl(path, 'filenames.pkl')
         y_encoded = []
         y = []
@@ -25,6 +27,7 @@ def load_gt_data(num_samples:int, path="cupsnbottles/" ):
 
         df = {'index': np.arange(len(y)),
               'label': y}
+        df = pd.DataFrame.from_dict(df)
 
     # to load the original cupsnbottles dataset
     else:
@@ -58,3 +61,16 @@ def t_sne(X, dims=2, perplexity=30, learning_rate=200.0, n_iter=1000):
                          n_iter=n_iter, n_iter_without_progress=300, method='barnes_hut',
                          random_state=0)
     return tsne.fit_transform(X)
+
+def load_images(path, indices):
+    """
+    Loads images/ of dataset with any suffix (assumes images are titled with their indices)
+    :param: path = path of the dataset, containing the images/ folder
+    :param: indices = indices of the images to open, should correspond to the images name
+    :returns: loaded images as a list
+    """
+    suffix = os.listdir(os.path.join(path, 'images'))[0].split(".")[-1]
+    imgs = []
+    for i in indices:
+        imgs.append(Image.open(os.path.join(path, 'images', i + '.' + suffix)))
+    return imgs

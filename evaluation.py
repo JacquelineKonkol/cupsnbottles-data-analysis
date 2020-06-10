@@ -31,15 +31,15 @@ from sklearn.pipeline import Pipeline
 ################################################################################
 ####################################specify#####################################
 
-classifier = "QDA" # look up in classifier_names list
+classifier = "Decision Tree" # look up in classifier_names list
 use_pretrained_classifier = False
-imgs_falsely_classified = True # only misclassified images are used in
+imgs_falsely_classified = False # only misclassified images are used in
                                # the scatterplot, random otherwise
 
-num_samples = 2179 # 2179 at most
+num_samples = 50
 dims = 2
 
-path_dataset = '' # TODO generalize so different datasets can be used
+path_dataset = None # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # keep in mind that we don't want to test on data the model was trained on
 path_best_params = 'classifiers_best_params/'
 
@@ -75,7 +75,7 @@ def prepare_clf(X_train, y_train):
 
 def main():
 
-    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples)
+    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples, path_dataset)
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y_encoded, test_size=0.33, random_state=42)
 
     clf = prepare_clf(X_train, y_train)
@@ -112,8 +112,7 @@ def main():
     plotting.plot_confusion_matrix(cm,classes=label_names, img_name="absolute_cupsnbottles", cmap=plt.cm.Greens)
     plotting.plot_confusion_matrix(cm, classes=label_names, img_name="norm_cupsnbottles", normalize=True, title='Normalized confusion matrix', cmap=plt.cm.Greens)
 
-
-    imgs = load_cupsnbottles.load_images('cupsnbottles/', inds[indices])
+    imgs = tools.load_images(path_dataset, inds[indices])
     plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
 
 
