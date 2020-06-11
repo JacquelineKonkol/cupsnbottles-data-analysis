@@ -39,7 +39,7 @@ imgs_falsely_classified = False # only misclassified images are used in
 num_samples = 50
 dims = 2
 
-path_dataset = None # TODO generalize so different datasets can be used
+path_dataset = "test_dataset/" # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # keep in mind that we don't want to test on data the model was trained on
 path_best_params = 'classifiers_best_params/'
 
@@ -73,28 +73,13 @@ def prepare_clf(X_train, y_train):
     return clf
 
 
-def main():
-
-    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples, path_dataset)
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y_encoded, test_size=0.33, random_state=42)
-
-    clf = prepare_clf(X_train, y_train)
-
-    y_pred = clf.predict(X_test)
-    score = clf.score(X_test, y_test)
-    for (i, label) in enumerate(label_names):
-        y_pred[y_pred == label] = i
-    y_pred = y_pred.astype(int)
-    pred_proba = clf.predict_proba(X_test)
-    pred_proba = np.max(pred_proba, axis=1)
-
+def visualization(X_test, X_train, df, label_names, pred_proba, score, y_pred, y_test, y_train, y_pred_train):
     # plotting t-SNE
     title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
-    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples, classifier, "cupsnbottles", dims)
-
+    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples, classifier,
+                                     "cupsnbottles", dims)
     inds = np.array(df.index)
     indices = None
-
     # plot only misclassifications
     if imgs_falsely_classified:
         indices = np.argwhere(y_pred != y_test).flatten()
@@ -106,14 +91,34 @@ def main():
         indices = np.random.randint(0, len(y_test), (imgs_to_plot))
         title_imgs = str(imgs_to_plot) + ' random images'
 
-    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples, classifier,"cupsnbottles", dims)
-
+    cm_train = metrics.confusion_matrix(y_train, y_pred_train)
+    plotting.plot_confusion_matrix(cm_train, classes=label_names, img_name="absolute_cupsnbottles_train", cmap=plt.cm.Blues)
+    plotting.plot_confusion_matrix(cm_train, classes=label_names, img_name="norm_cupsnbottles_train", normalize=True,
+                                   title='Normalized confusion matrix, trainings data', cmap=plt.cm.Blues)
     cm = metrics.confusion_matrix(y_test, y_pred)
-    plotting.plot_confusion_matrix(cm,classes=label_names, img_name="absolute_cupsnbottles", cmap=plt.cm.Greens)
-    plotting.plot_confusion_matrix(cm, classes=label_names, img_name="norm_cupsnbottles", normalize=True, title='Normalized confusion matrix', cmap=plt.cm.Greens)
+    plotting.plot_confusion_matrix(cm, classes=label_names, img_name="absolute_cupsnbottles", cmap=plt.cm.Greens)
+    plotting.plot_confusion_matrix(cm, classes=label_names, img_name="norm_cupsnbottles", normalize=True,
+                                   title='Normalized confusion matrix', cmap=plt.cm.Greens)
 
     imgs = tools.load_images(path_dataset, inds[indices])
     plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
+
+
+def main():
+
+    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples, path_dataset)
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y_encoded, test_size=0.33, random_state=42)
+    clf = prepare_clf(X_train, y_train)
+
+    y_pred = clf.predict(X_test)
+    y_pred_train = clf.predict(X_train)
+    score = clf.score(X_test, y_test)
+    y_pred = y_pred.astype(int)
+    y_pred_train = y_pred_train.astype(int)
+    pred_proba = clf.predict_proba(X_test)
+    pred_proba = np.max(pred_proba, axis=1)
+
+    visualization(X_test, X_train, df, label_names, pred_proba, score, y_pred, y_test, y_train, y_pred_train)
 
 
 if __name__ == "__main__":
