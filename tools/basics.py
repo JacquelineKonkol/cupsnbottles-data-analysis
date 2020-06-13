@@ -9,7 +9,7 @@ from PIL import Image
 # preliminary, data format will change
 # TODO num_samples noch einbauen, oder entfernen?
 def load_gt_data(num_samples:int, path="cupsnbottles/" ):
-    if path is not 'cupsnbottles/':
+    if path != 'cupsnbottles/':
         X = open_pkl(path, 'features.pkl')
         label_names = ['Can01', 'Can02', 'Can03', 'Coke001', 'Coke002Cup', 'WaterBottle']
 
@@ -39,10 +39,12 @@ def load_gt_data(num_samples:int, path="cupsnbottles/" ):
         for (i, label) in enumerate(label_names):
             y_encoded[y == label] = i
         y_encoded = y_encoded.astype(int)
-        X = X[:num_samples]
-        y = y[:num_samples]
-        y_encoded = y_encoded[:num_samples]
-    return X, y_encoded, y, label_names, df
+
+    if num_samples == 0:
+        num_samples = len(X)
+    label_names = np.unique(y[:num_samples])
+
+    return X[:num_samples], y_encoded[:num_samples], y[:num_samples], label_names, df[:num_samples]
 
 def open_pkl(path, file):
     with open(os.path.join(path,file), 'rb') as f:

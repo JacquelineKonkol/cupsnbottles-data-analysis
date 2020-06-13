@@ -23,6 +23,7 @@ from sklearn import manifold, datasets
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
+import os
 
 ################################################################################
 ####################################specify#####################################
@@ -35,7 +36,7 @@ dims_method = None
 #dims_method = 'pca'
 #dims_method = 'tsne'
 
-path_dataset = '' # TODO generalize so different datasets can be used
+path_dataset = "cupsnbottles/" # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
 
@@ -69,11 +70,19 @@ classifiers = [
 
 ################################################################################
 def save_grid_search_results(clf, classifier_name):
+    result_path_params = os.path.join(path_best_params, path_dataset)
+    if not os.path.isdir(result_path_params):
+        os.mkdir(result_path_params)
+
+    result_path_clf= os.path.join(path_trained_classifiers, path_dataset)
+    if not os.path.isdir(result_path_clf):
+        os.mkdir(result_path_clf)
+
     result_df = pd.DataFrame.from_dict(clf.cv_results_)
     result_df.insert(0, "Params", clf.cv_results_['params'], True)
-    result_df.to_csv("classifiers_best_params\grid_search_" + classifier_name.replace(' ', '_') + ".csv", sep=";", index=False)
-    dump(clf, path_trained_classifiers + classifier.replace(' ', '_') + '.joblib')
-    dump(clf.best_params_, path_best_params + classifier.replace(' ', '_') + '_params.joblib')
+    result_df.to_csv(result_path_params + "grid_search_" + classifier_name.replace(' ', '_') + ".csv", mode='a', sep=";", index=False)
+    dump(clf, result_path_clf + classifier.replace(' ', '_') + '.joblib')
+    dump(clf.best_params_, result_path_params+ classifier.replace(' ', '_') + '_params.joblib')
 
     print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_)
 
@@ -128,7 +137,7 @@ def dim_red(X, dims=2, init='pca'):
 
 def main():
     # load the data
-    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples)
+    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples, path=path_dataset)
 
     if dims is not None:
         if dims_method:
@@ -136,7 +145,7 @@ def main():
         else:
             X = dim_red(X, dims)
 
-    gs_classifiers = grid_search(X, y, classifier)
+    gs_classifiers = grid_search(X, y_encoded, classifier)
 
 
 if __name__ == "__main__":
