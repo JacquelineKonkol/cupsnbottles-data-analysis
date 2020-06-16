@@ -4,31 +4,25 @@ import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import tools.basics as tools
 
 print(__doc__)
-import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from matplotlib.ticker import NullFormatter
-from sklearn import manifold, datasets
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
+from sklearn_lvq import GlvqModel # Doku Params: https://github.com/MrNuggelz/sklearn-lvq/blob/625d38e38aceb8f8770761e00fb639ad0c1a9147/sklearn_lvq/glvq.py#L31
 import os
 
 ################################################################################
 ####################################specify#####################################
 
-classifier = "Nearest Neighbors" # If none is given from classifier_names, then gs is performed on all classifiers.
+classifier = "Neural Net" # If none is given from classifier_names, then gs is performed on all classifiers.
 
 num_samples = 2179 #at most 2179, default: None
 dims = None # number of dimensions to reduce to before training
@@ -41,20 +35,21 @@ path_trained_classifiers = 'trained_classifiers/' # specify where trained classi
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
 
 classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA"]
+          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA", "GLVQ"]
 
 # can be adjusted
 parameters = [
     {'n_neighbors': [2, 5, 10], 'weights': ['uniform', 'distance'], 'algorithm': ['auto', 'brute']}, # K Nearest Neighbors
-    {'kernel':['linear'], 'C': [1, 5, 10], 'probability': [True]}, # Linear SVM (predict_proba with Platt scaling)
-    {'kernel':['rbf'], 'C':[1, 5, 10], 'probability': [True]}, # RBF SVM (predict_proba with Platt scaling)
-    {}, # Gaussian Process
-    {'max_depth':[None, 5, 10], 'min_samples_split': [2, 5, 10]}, # Decision Tree
-    {'max_depth':[None, 5, 10], 'n_estimators':[10, 50, 100], 'max_features':[1]}, # Random Forest
-    {'alpha': [0.0001, 0.001], 'max_iter': [1000, 2000]}, # Neural Net
+    {'kernel':['linear'], 'C': [1, 5, 10], 'probability': [True], 'random_state':[17, 42]}, # Linear SVM (predict_proba with Platt scaling)
+    {'kernel':['rbf'], 'C':[1, 5, 10], 'probability': [True], 'random_state':[17, 42]}, # RBF SVM (predict_proba with Platt scaling)
+    {'random_state':[17, 42]}, # Gaussian Process
+    {'max_depth':[None, 5, 10], 'min_samples_split': [2, 5, 10], 'random_state':[17, 42]}, # Decision Tree
+    {'max_depth':[None, 5, 10], 'n_estimators':[10, 50, 100], 'max_features':[1], 'random_state':[17, 42]}, # Random Forest
+    {'alpha': [0.0001, 0.001], 'max_iter': [1000, 2000], 'random_state':[17, 42]}, # Neural Net
     {}, # Naive Bayes
     #{'var_smoothing': [1e-9]}, # Naive Bayes this does not work eventough it's the default value
-    {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}] # Quadratic Discriminant Analysis
+    {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}, # Quadratic Discriminant Analysis
+    {'max_iter':[2500, 5000], 'beta':[1, 2], 'random_state':[17, 42]}] # qlvq
 
 classifiers = [
      KNeighborsClassifier(),
@@ -65,7 +60,8 @@ classifiers = [
      RandomForestClassifier(),
      MLPClassifier(),
      GaussianNB(),
-     QuadraticDiscriminantAnalysis()]
+     QuadraticDiscriminantAnalysis(),
+     GlvqModel()]
 
 
 ################################################################################
@@ -84,7 +80,7 @@ def save_grid_search_results(clf, classifier_name):
     dump(clf, result_path_clf + classifier.replace(' ', '_') + '.joblib')
     dump(clf.best_params_, result_path_params+ classifier.replace(' ', '_') + '_params.joblib')
 
-    print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_)
+    print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_, ' with score: ', clf.best_score_)
 
 
 def grid_search(X, y, classifier=None):
