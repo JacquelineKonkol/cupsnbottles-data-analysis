@@ -27,6 +27,7 @@ from sklearn.decomposition import PCA
 from sklearn import metrics
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
+import pandas as pd
 
 ################################################################################
 ####################################specify#####################################
@@ -36,7 +37,7 @@ use_pretrained_classifier = True
 imgs_falsely_classified = False # only misclassified images are used in
                                # the scatterplot, random otherwise
 all_samples = 0 # 0 is the default to load the whole dataset
-num_samples = 50
+num_samples = all_samples
 dims = 2
 
 path_dataset = "cupsnbottles/" # TODO generalize so different datasets can be used
@@ -108,18 +109,47 @@ def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y,
     plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
 
 
+#TODO umstrukturieren
+def calculate_cluster_mean(X_embedded, y_test, label_names):
+    cluster_infos = {}
+    for i in range(len(label_names)):
+        X_class_indx =  y_test == i
+        X_selected = X_embedded[X_class_indx]
+        mean = np.mean(X_selected, axis=0)
+        var = np.mean(X_selected, axis=0)
+        cluster_infos[i] = {'mean':mean, "var":var}
+
+    return cluster_infos
+
+
+
+#TODO umstrukturieren
+def analysis(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score):
+    X_embedded = tools.t_sne(X_test) # nur mit X_test? Alle sinnvoller für Cluster mean?
+    cluster_infos = calculate_cluster_mean(X_embedded, y_test, label_names)
+    print(cluster_infos) #in dataFalsePredict Abstände zu Klassen speichern
+    y_pred[0] = 1 #only for testing if y_test has no false classified samples
+    falsePredict = y_test != y_pred
+    dataFalsePredict = {'True Label':y_test[falsePredict],
+                        'Predict Label':y_pred[falsePredict],
+                        'Predict Prob.':pred_proba[falsePredict]
+                        }
+    df = pd.DataFrame(dataFalsePredict, columns=['True Label', 'Predict Label', 'Predict Prob.']) # Todo Index, Id der Punkte mitfesthalten zur Identifikation, Todo labelname hinzufügen
+    print(df) # Todo speichern als csv wie in gridsearch
+
 def main():
     X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples, path_dataset)
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y_encoded, test_size=0.33, random_state=42)
     clf = prepare_clf(X_train, y_train)
-
+    print(len(y_test))
     y_pred = clf.predict(X_test)
     y_pred_train = clf.predict(X_train)
     score = clf.score(X_test, y_test)
     pred_proba = clf.predict_proba(X_test)
     pred_proba = np.max(pred_proba, axis=1)
 
-    visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score)
+    analysis(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score)
+    #visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score)
 
 
 if __name__ == "__main__":
