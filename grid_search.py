@@ -1,10 +1,12 @@
 # TODO generalize so different datasets can be used
+from sklearn import model_selection
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import tools.basics as tools
 
 print(__doc__)
 import pandas as pd
+import numpy as np
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -16,13 +18,17 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
-from sklearn_lvq import GlvqModel # Doku Params: https://github.com/MrNuggelz/sklearn-lvq/blob/625d38e38aceb8f8770761e00fb639ad0c1a9147/sklearn_lvq/glvq.py#L31
+# installation: pip install git+https://github.com/vlosing/ILVQ.git Quelle: https://github.com/vlosing/ILVQ/blob/master/ILVQ/GLVQ.py
+from ILVQ.TrainTestSplitsManager import TrainTestSplitsManager
+from ILVQ.hyperParameterFactory import getDefaultHyperParams
+from ILVQ.auxiliaryFunctions import trainClassifier, updateClassifierEvaluations, getTrainSetCfg
+from ILVQ.LVQFactory import getLVQClassifier
 import os
 
 ################################################################################
 ####################################specify#####################################
 
-classifier = "Neural Net" # If none is given from classifier_names, then gs is performed on all classifiers.
+classifier = "GLVQ" # If none is given from classifier_names, then gs is performed on all classifiers.
 
 num_samples = 2179 #at most 2179, default: None
 dims = None # number of dimensions to reduce to before training
@@ -35,7 +41,7 @@ path_trained_classifiers = 'trained_classifiers/' # specify where trained classi
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
 
 classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA", "GLVQ"]
+          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA"]   #, "GLVQ"]
 
 # can be adjusted
 parameters = [
@@ -48,8 +54,8 @@ parameters = [
     {'alpha': [0.0001, 0.001], 'max_iter': [1000, 2000], 'random_state':[17, 42]}, # Neural Net
     {}, # Naive Bayes
     #{'var_smoothing': [1e-9]}, # Naive Bayes this does not work eventough it's the default value
-    {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}, # Quadratic Discriminant Analysis
-    {'max_iter':[2500, 5000], 'beta':[1, 2], 'random_state':[17, 42]}] # qlvq
+    {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}] # Quadratic Discriminant Analysis
+    #{} #{'max_iter':[2500, 5000], 'beta':[1, 2], 'random_state':[17, 42]}] # qlvq
 
 classifiers = [
      KNeighborsClassifier(),
@@ -60,8 +66,8 @@ classifiers = [
      RandomForestClassifier(),
      MLPClassifier(),
      GaussianNB(),
-     QuadraticDiscriminantAnalysis(),
-     GlvqModel()]
+     QuadraticDiscriminantAnalysis()]
+
 
 
 ################################################################################
@@ -83,6 +89,17 @@ def save_grid_search_results(clf, classifier_name):
     print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_, ' with score: ', clf.best_score_)
 
 
+def run_GLVQ(X, y_encoded, label_names):
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y_encoded, test_size=0.33, random_state=42)
+
+    clf = getLVQClassifier(netType='GLVQ', insertionStrategy='samplingCost')
+
+    predictedLabels, complexity, complexityNumParameterMetric = clf.trainOnline(X_train, y_train, y_train, metaData=None, chunkSize=1)
+    test_predict = clf.predict(X_test)
+    print(sum(test_predict==y_test)/len(test_predict))
+    print(complexity)
+    print(complexityNumParameterMetric)
+
 def grid_search(X, y, classifier=None):
     """
     Performs grid search of either a specific or all implemented classifiers and
@@ -98,7 +115,8 @@ def grid_search(X, y, classifier=None):
     # perform grid search over specified classifier
     if classifier is not None:
         clf_index = classifier_names.index(classifier)
-        clf = GridSearchCV(classifiers[clf_index], parameters[clf_index], return_train_score=True)
+        #clf = GridSearchCV(classifiers[clf_index], parameters[clf_index], return_train_score=True)
+        clf = classifiers[clf_index]
         clf.fit(X, y)
         gs_classifiers.append(clf)
         save_grid_search_results(clf, classifier)
@@ -141,8 +159,8 @@ def main():
         else:
             X = dim_red(X, dims)
 
-    gs_classifiers = grid_search(X, y_encoded, classifier)
-
+    #gs_classifiers = grid_search(X, y_encoded, classifier)
+    run_GLVQ(X, y_encoded, label_names)
 
 if __name__ == "__main__":
     main()
