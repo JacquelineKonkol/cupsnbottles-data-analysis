@@ -101,7 +101,8 @@ def get_deep_feats(imgs, use_model='vgg16', pca_dim=None):
     return rtn_feats
 
 def preprocess_image(img, imgsize):
-    img_load = scipy.misc.imresize(img, imgsize)
+    img_load = np.array(Image.fromarray(img).resize(imgsize))
+    #img_load = scipy.misc.imresize(img, imgsize)
     img_data = image.img_to_array(img_load)
     img_data = np.expand_dims(img_data, axis=0)
     #img_data = (img_data, dim_ordering='tf') # what does this?
@@ -130,7 +131,8 @@ def resize_image_tuple_to_max_edge_length(imgs, max_edge_length=200):
         else:
             w = max_edge_length
             h = int((float(s[0])/s[1]) * max_edge_length)
-        rtn_imgs.append(scipy.misc.imresize(img, (h,w,s[2])))
+        rtn_imgs.append(np.array(Image.fromarray(img).resize((h,w))))
+        #rtn_imgs.append(scipy.misc.imresize(img, (h,w,s[2])))
     return rtn_imgs
 
 
