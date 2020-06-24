@@ -38,5 +38,5 @@ clean_dataset()
 feature_extraction.create_arbitrary_image_ds(os.path.join(args.path, 'images'), args.path)
 
 # temporary for dataset01/ to create properties.csv
-X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(None, args.path)
+X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(0, args.path)
 create_properties_csv(df)
