@@ -28,8 +28,7 @@ import os
 ################################################################################
 ####################################specify#####################################
 
-classifier = "Nearest Neighbors" # If none is given from classifier_names, then gs is performed on all classifiers.
-
+classifier = "GLVQ"
 num_samples = 2179 #at most 2179, default: None
 dims = None # number of dimensions to reduce to before training
 dims_method = None
@@ -167,7 +166,7 @@ def main():
         else:
             X = dim_red(X, dims)
 
-    gs_classifiers = grid_search(X, y_encoded, classifier, label_names)
+    gs_classifiers = grid_search(X, y_encoded, label_names, classifier)
 
 if __name__ == "__main__":
     main()

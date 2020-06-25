@@ -33,15 +33,15 @@ import pandas as pd
 ################################################################################
 ####################################specify#####################################
 
-classifier = "Nearest Neighbors" # look up in classifier_names list
-use_pretrained_classifier = False
+classifier = "GLVQ" # look up in classifier_names list
+use_pretrained_classifier = True
 imgs_falsely_classified = False # only misclassified images are used in
                                # the scatterplot, random otherwise
 all_samples = 0 # 0 is the default to load the whole dataset
 num_samples = all_samples
 dims = 2
 
-path_dataset = "cupsnbottles/" # cupsnbottles/
+path_dataset = "dataset01/" # cupsnbottles/
 path_trained_classifiers = 'trained_classifiers/' # keep in mind that we don't want to test on data the model was trained on
 path_best_params = 'classifiers_best_params/'
 
