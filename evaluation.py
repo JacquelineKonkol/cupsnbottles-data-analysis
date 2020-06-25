@@ -1,6 +1,7 @@
 # TODO generalize so different datasets can be used
 # TODO falls vortrainierter Classifier: welche Testdaten sollen genommen werden?
 # TODO Option, neu trainierten Classifier zu speichern?
+import os
 
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import tools.basics as tools
@@ -32,7 +33,7 @@ import pandas as pd
 ################################################################################
 ####################################specify#####################################
 
-classifier = "Nearest_Neighbors" # look up in classifier_names list
+classifier = "Nearest Neighbors" # look up in classifier_names list
 use_pretrained_classifier = True
 imgs_falsely_classified = False # only misclassified images are used in
                                # the scatterplot, random otherwise
@@ -40,14 +41,14 @@ all_samples = 0 # 0 is the default to load the whole dataset
 num_samples = all_samples
 dims = 2
 
-path_dataset = "cupsnbottles/" # TODO generalize so different datasets can be used
+path_dataset = "dataset01/" # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # keep in mind that we don't want to test on data the model was trained on
 path_best_params = 'classifiers_best_params/'
 
 ################################################################################
 
 classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-                    "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA"]
+                    "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA", "GLVQ"]
 
 classifiers = [
      KNeighborsClassifier(),
@@ -67,6 +68,9 @@ def prepare_clf(X_train, y_train):
         clf = load(path_trained_classifiers + path_dataset + classifier.replace(' ', '_') + ".joblib")
 
     else:
+        if classifier == "GLVQ":
+            print("Option best params for QLVQ not available")
+            exit()
         # train anew with best model parameters
         loaded_params = load(path_best_params + path_dataset + classifier.replace(' ', '_') + "_params.joblib")
         clf = classifiers[classifier_names.index(classifier)]
@@ -78,8 +82,7 @@ def prepare_clf(X_train, y_train):
 def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score):
     # plotting t-SNE
     title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
-    X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples, classifier,
-                                     "cupsnbottles", dims)
+
     inds = np.array(df.index)
     indices = None
     # plot only misclassifications
@@ -106,7 +109,12 @@ def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y,
                                        title='Normalized confusion matrix', cmap=plt.cm.Greens)
 
     imgs = tools.load_images(path_dataset, inds[indices])
-    plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
+
+    if (pred_proba != None):
+        X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples,
+                                         classifier,
+                                         "cupsnbottles", dims)
+        plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
 
 
 #TODO umstrukturieren
@@ -116,7 +124,7 @@ def calculate_cluster_mean(X_embedded, y_test, label_names):
         X_class_indx =  y_test == i
         X_selected = X_embedded[X_class_indx]
         mean = np.mean(X_selected, axis=0)
-        var = np.mean(X_selected, axis=0)
+        var = np.var(X_selected, axis=0)
         cluster_infos[i] = {'mean':mean, "var":var}
 
     return cluster_infos
@@ -124,32 +132,57 @@ def calculate_cluster_mean(X_embedded, y_test, label_names):
 
 
 #TODO umstrukturieren
-def analysis(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score):
-    X_embedded = tools.t_sne(X_test) # nur mit X_test? Alle sinnvoller für Cluster mean?
-    cluster_infos = calculate_cluster_mean(X_embedded, y_test, label_names)
-    print(cluster_infos) #in dataFalsePredict Abstände zu Klassen speichern
-    y_pred[0] = 1 #only for testing if y_test has no false classified samples
+def analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, indx_test):
+    X_embedded = tools.t_sne(X)
+    cluster_means = calculate_cluster_mean(X_embedded, y_encoded, label_names)
+
     falsePredict = y_test != y_pred
-    dataFalsePredict = {'True Label':y_test[falsePredict],
-                        'Predict Label':y_pred[falsePredict],
-                        'Predict Prob.':pred_proba[falsePredict]
+    true_labelnames = [label_names[i] for i in y_test[falsePredict]]
+    predict_labelnames = [label_names[i] for i in y_pred[falsePredict].astype(int)]
+    IDs = [indx_test[i] for i, value in enumerate(falsePredict) if value]
+
+    dataFalsePredict = {'ids': IDs,
+                        'True Label':y_test[falsePredict],
+                        'True Labelname': true_labelnames,
+                        'Predict Label':y_pred[falsePredict].astype(int),
+                        'Predict Labelname': predict_labelnames
                         }
-    df = pd.DataFrame(dataFalsePredict, columns=['True Label', 'Predict Label', 'Predict Prob.']) # Todo Index, Id der Punkte mitfesthalten zur Identifikation, Todo labelname hinzufügen
-    print(df) # Todo speichern als csv wie in gridsearch
+
+    for i in range(0, len(label_names)):
+        key ='Dist to Cluster ' + str(i)
+        dataFalsePredict[key] = ["{:.3f}".format(float(np.linalg.norm(point-cluster_means[i]['mean']))).replace(".", ",") for point in X_embedded[IDs]]
+
+    if pred_proba is not None:
+        dataFalsePredict['Predict Prob.']: pred_proba[falsePredict]
+
+    df = pd.DataFrame(dataFalsePredict, columns=dataFalsePredict.keys())
+
+    if not os.path.isdir("evaluation"):
+        os.mkdir("evaluation")
+    df.to_csv("evaluation/" + path_dataset.replace('/', '') + "_analysis_" + classifier.replace(' ', '_') + ".csv", mode='w',
+                     sep=";", index=False)
+
 
 def main():
     X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples, path_dataset)
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y_encoded, test_size=0.33, random_state=42)
+    indx = list(range(len(X)))
+    X_train, X_test, y_train, y_test, indx_train, indx_test= model_selection.train_test_split(X, y_encoded, indx, test_size=0.33, random_state=42)
+
     clf = prepare_clf(X_train, y_train)
-    print(len(y_test))
+
     y_pred = clf.predict(X_test)
     y_pred_train = clf.predict(X_train)
-    score = clf.score(X_test, y_test)
-    pred_proba = clf.predict_proba(X_test)
-    pred_proba = np.max(pred_proba, axis=1)
 
-    analysis(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score)
-    #visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score)
+    if classifier == "GLVQ":
+        score = clf.getAccuracy(X_test, y_test)
+        pred_proba=None # predict_proba from the used Glvq lib is only for two classes implemented
+    else:
+        score = clf.score(X_test, y_test)
+        pred_proba = clf.predict_proba(X_test)
+        pred_proba = np.max(pred_proba, axis=1)
+
+    analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, indx_test)
+    visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score)
 
 
 if __name__ == "__main__":

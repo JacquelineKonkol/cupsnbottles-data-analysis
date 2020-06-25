@@ -28,7 +28,7 @@ import os
 ################################################################################
 ####################################specify#####################################
 
-classifier = "GLVQ" # If none is given from classifier_names, then gs is performed on all classifiers.
+classifier = "Nearest Neighbors" # If none is given from classifier_names, then gs is performed on all classifiers.
 
 num_samples = 2179 #at most 2179, default: None
 dims = None # number of dimensions to reduce to before training
@@ -36,12 +36,12 @@ dims_method = None
 #dims_method = 'pca'
 #dims_method = 'tsne'
 
-path_dataset = "cupsnbottles/" # TODO generalize so different datasets can be used
+path_dataset = "dataset01/" # TODO generalize so different datasets can be used
 path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
 
 classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA"]   #, "GLVQ"]
+          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA", "GLVQ"]
 
 # can be adjusted
 parameters = [
@@ -82,7 +82,7 @@ def save_grid_search_results(clf, classifier_name):
 
     result_df = pd.DataFrame.from_dict(clf.cv_results_)
     result_df.insert(0, "Params", clf.cv_results_['params'], True)
-    result_df.to_csv(result_path_params + "grid_search_" + classifier_name.replace(' ', '_') + ".csv", mode='a', sep=";", index=False)
+    result_df.to_csv(result_path_params + "grid_search_" + classifier_name.replace(' ', '_') + ".csv", mode='w', sep=";", index=False)
     dump(clf, result_path_clf + classifier.replace(' ', '_') + '.joblib')
     dump(clf.best_params_, result_path_params+ classifier.replace(' ', '_') + '_params.joblib')
 
@@ -94,13 +94,17 @@ def run_GLVQ(X, y_encoded, label_names):
 
     clf = getLVQClassifier(netType='GLVQ', insertionStrategy='samplingCost')
 
-    predictedLabels, complexity, complexityNumParameterMetric = clf.trainOnline(X_train, y_train, y_train, metaData=None, chunkSize=1)
-    test_predict = clf.predict(X_test)
-    print(sum(test_predict==y_test)/len(test_predict))
+    predictedLabels, complexity, complexityNumParameterMetric = clf.trainOnline(X_train, y_train, label_names, metaData=None, chunkSize=1)
+
+    result_path_clf = os.path.join(path_trained_classifiers, path_dataset)
+    if not os.path.isdir(result_path_clf):
+        os.mkdir(result_path_clf)
+    dump(clf, result_path_clf + classifier.replace(' ', '_') + '.joblib')
+    print("Acc: ", clf.getAccuracy(X_test, y_test))
     print(complexity)
     print(complexityNumParameterMetric)
 
-def grid_search(X, y, classifier=None):
+def grid_search(X, y, label_names, classifier=None):
     """
     Performs grid search of either a specific or all implemented classifiers and
     saves the trained classifier in /trained_classifiers
@@ -114,17 +118,21 @@ def grid_search(X, y, classifier=None):
 
     # perform grid search over specified classifier
     if classifier is not None:
-        clf_index = classifier_names.index(classifier)
-        #clf = GridSearchCV(classifiers[clf_index], parameters[clf_index], return_train_score=True)
-        clf = classifiers[clf_index]
-        clf.fit(X, y)
-        gs_classifiers.append(clf)
-        save_grid_search_results(clf, classifier)
+        if classifier == "GLVQ":
+            run_GLVQ(X, y, label_names)
+        else:
+            clf_index = classifier_names.index(classifier)
+            clf = GridSearchCV(classifiers[clf_index], parameters[clf_index], return_train_score=True)
+            #clf = classifiers[clf_index]
+            clf.fit(X, y)
+            gs_classifiers.append(clf)
+            save_grid_search_results(clf, classifier)
         print('>> DONE')
 
     # perform grid search over all classifier
     else:
         for i, classifier in enumerate(classifiers):
+
             clf = GridSearchCV(classifier, parameters[i], return_train_score=True)
             clf.fit(X, y)
             gs_classifiers.append(clf)
@@ -159,8 +167,7 @@ def main():
         else:
             X = dim_red(X, dims)
 
-    #gs_classifiers = grid_search(X, y_encoded, classifier)
-    run_GLVQ(X, y_encoded, label_names)
+    gs_classifiers = grid_search(X, y_encoded, classifier, label_names)
 
 if __name__ == "__main__":
     main()

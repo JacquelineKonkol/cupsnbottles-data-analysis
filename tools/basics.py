@@ -24,6 +24,8 @@ def load_gt_data(num_samples:int, path="cupsnbottles/" ):
                     y.append(label)
                     y_encoded.append(encoded)
 
+        y = np.array(y)
+        y_encoded = np.array(y_encoded)
         df = {'index': np.arange(len(y)),
               'label': y}
         df = pd.DataFrame.from_dict(df)
@@ -31,7 +33,6 @@ def load_gt_data(num_samples:int, path="cupsnbottles/" ):
     # to load the original cupsnbottles dataset
     else:
         X = load_cupsnbottles.load_features(path)
-        print(X)
         df = load_cupsnbottles.load_properties(path)
         y = np.array(df.label)
         y_encoded = y.copy()
