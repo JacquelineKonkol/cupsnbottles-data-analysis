@@ -7,7 +7,6 @@ import pandas as pd
 from PIL import Image
 
 # preliminary, data format will change
-# TODO num_samples noch einbauen, oder entfernen?
 def load_gt_data(num_samples:int, path="cupsnbottles/" ):
     if path != 'cupsnbottles/':
         X = open_pkl(path, 'features.pkl')

@@ -34,14 +34,14 @@ import pandas as pd
 ####################################specify#####################################
 
 classifier = "Nearest Neighbors" # look up in classifier_names list
-use_pretrained_classifier = True
+use_pretrained_classifier = False
 imgs_falsely_classified = False # only misclassified images are used in
                                # the scatterplot, random otherwise
 all_samples = 0 # 0 is the default to load the whole dataset
 num_samples = all_samples
 dims = 2
 
-path_dataset = "dataset01/" # TODO generalize so different datasets can be used
+path_dataset = "cupsnbottles/" # cupsnbottles/
 path_trained_classifiers = 'trained_classifiers/' # keep in mind that we don't want to test on data the model was trained on
 path_best_params = 'classifiers_best_params/'
 
@@ -110,7 +110,7 @@ def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y,
 
     imgs = tools.load_images(path_dataset, inds[indices])
 
-    if (pred_proba != None):
+    if (pred_proba is not None):
         X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, num_samples,
                                          classifier,
                                          "cupsnbottles", dims)
@@ -148,15 +148,14 @@ def analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, indx
                         'Predict Labelname': predict_labelnames
                         }
 
+    if pred_proba is not None:
+        dataFalsePredict['Predict Prob.'] = pred_proba[falsePredict]
+
     for i in range(0, len(label_names)):
         key ='Dist to Cluster ' + str(i)
         dataFalsePredict[key] = ["{:.3f}".format(float(np.linalg.norm(point-cluster_means[i]['mean']))).replace(".", ",") for point in X_embedded[IDs]]
 
-    if pred_proba is not None:
-        dataFalsePredict['Predict Prob.']: pred_proba[falsePredict]
-
     df = pd.DataFrame(dataFalsePredict, columns=dataFalsePredict.keys())
-
     if not os.path.isdir("evaluation"):
         os.mkdir("evaluation")
     df.to_csv("evaluation/" + path_dataset.replace('/', '') + "_analysis_" + classifier.replace(' ', '_') + ".csv", mode='w',
