@@ -18,29 +18,27 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
-# installation: pip install git+https://github.com/vlosing/ILVQ.git Quelle: https://github.com/vlosing/ILVQ/blob/master/ILVQ/GLVQ.py
-from ILVQ.TrainTestSplitsManager import TrainTestSplitsManager
-from ILVQ.hyperParameterFactory import getDefaultHyperParams
-from ILVQ.auxiliaryFunctions import trainClassifier, updateClassifierEvaluations, getTrainSetCfg
-from ILVQ.LVQFactory import getLVQClassifier
 import os
+from tools.config_loader import config
 
 ################################################################################
 ####################################specify#####################################
+config = config()
 
-classifier = "GLVQ"
-num_samples = 2179 #at most 2179, default: None
+classifier = "nearest_neighbors"
 dims = None # number of dimensions to reduce to before training
 dims_method = None
 #dims_method = 'pca'
 #dims_method = 'tsne'
 
-path_dataset = "dataset01/" # TODO generalize so different datasets can be used
+''' Entfällt
+path_dataset = "dataset01/"
 path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
 path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
 
 classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
           "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA", "GLVQ"]
+
 
 # can be adjusted
 parameters = [
@@ -55,7 +53,8 @@ parameters = [
     #{'var_smoothing': [1e-9]}, # Naive Bayes this does not work eventough it's the default value
     {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}] # Quadratic Discriminant Analysis
     #{} #{'max_iter':[2500, 5000], 'beta':[1, 2], 'random_state':[17, 42]}] # qlvq
-
+'''
+#TODO Dict über namen statt Positionen im Array
 classifiers = [
      KNeighborsClassifier(),
      SVC(),
@@ -71,11 +70,11 @@ classifiers = [
 
 ################################################################################
 def save_grid_search_results(clf, classifier_name):
-    result_path_params = os.path.join(path_best_params, path_dataset)
+    result_path_params = os.path.join(config.path_best_params, config.path_dataset)
     if not os.path.isdir(result_path_params):
         os.mkdir(result_path_params)
 
-    result_path_clf= os.path.join(path_trained_classifiers, path_dataset)
+    result_path_clf= os.path.join(config.path_trained_classifiers, config.path_dataset)
     if not os.path.isdir(result_path_clf):
         os.mkdir(result_path_clf)
 
@@ -87,21 +86,6 @@ def save_grid_search_results(clf, classifier_name):
 
     print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_, ' with score: ', clf.best_score_)
 
-
-def run_GLVQ(X, y_encoded, label_names):
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y_encoded, test_size=0.33, random_state=42)
-
-    clf = getLVQClassifier(netType='GLVQ', insertionStrategy='samplingCost')
-
-    predictedLabels, complexity, complexityNumParameterMetric = clf.trainOnline(X_train, y_train, label_names, metaData=None, chunkSize=1)
-
-    result_path_clf = os.path.join(path_trained_classifiers, path_dataset)
-    if not os.path.isdir(result_path_clf):
-        os.mkdir(result_path_clf)
-    dump(clf, result_path_clf + classifier.replace(' ', '_') + '.joblib')
-    print("Acc: ", clf.getAccuracy(X_test, y_test))
-    print(complexity)
-    print(complexityNumParameterMetric)
 
 def grid_search(X, y, label_names, classifier=None):
     """
@@ -117,25 +101,23 @@ def grid_search(X, y, label_names, classifier=None):
 
     # perform grid search over specified classifier
     if classifier is not None:
-        if classifier == "GLVQ":
-            run_GLVQ(X, y, label_names)
-        else:
-            clf_index = classifier_names.index(classifier)
-            clf = GridSearchCV(classifiers[clf_index], parameters[clf_index], return_train_score=True)
-            #clf = classifiers[clf_index]
-            clf.fit(X, y)
-            gs_classifiers.append(clf)
-            save_grid_search_results(clf, classifier)
+
+        clf_index = config.classifier_names.index(classifier)
+        clf = GridSearchCV(classifiers[clf_index], config.parameters_grid_search[clf_index], return_train_score=True)
+        #clf = classifiers[clf_index]
+        clf.fit(X, y)
+        gs_classifiers.append(clf)
+        save_grid_search_results(clf, classifier)
         print('>> DONE')
 
     # perform grid search over all classifier
     else:
         for i, classifier in enumerate(classifiers):
 
-            clf = GridSearchCV(classifier, parameters[i], return_train_score=True)
+            clf = GridSearchCV(classifier, config.parameters_grid_search[i], return_train_score=True)
             clf.fit(X, y)
             gs_classifiers.append(clf)
-            save_grid_search_results(clf, classifier_names[i])
+            save_grid_search_results(clf, config.classifier_names[i])
         print('>> DONE')
 
     return gs_classifiers
@@ -158,7 +140,7 @@ def dim_red(X, dims=2, init='pca'):
 
 def main():
     # load the data
-    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples, path=path_dataset)
+    X, y_encoded, y, label_names, df = tools.load_gt_data()
 
     if dims is not None:
         if dims_method:

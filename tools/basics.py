@@ -5,9 +5,12 @@ import os
 import pickle as pkl
 import pandas as pd
 from PIL import Image
+from tools.config_loader import config
+
+config = config()
 
 # preliminary, data format will change
-def load_gt_data(num_samples:int, path="cupsnbottles/" ):
+def load_gt_data(num_samples=config.num_samples, path=config.path_dataset ):
     if path != 'cupsnbottles/':
         X = open_pkl(path, 'features.pkl')
         label_names = ['Can01', 'Can02', 'Can03', 'Coke001', 'Coke002Cup', 'WaterBottle']
