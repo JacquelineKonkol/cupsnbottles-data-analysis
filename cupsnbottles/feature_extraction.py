@@ -44,15 +44,23 @@ import os
 import numpy as np
 import pickle as pkl
 from PIL import Image
+import tools.basics as tools
 
 
-def get_files_of_type(path, type='g'):        
+def get_files_of_type(path, output_dir, type='g'):
     #return np.array([x for x in sorted(os.listdir(path)) if x.lower().endswith(type.lower())])
-    return np.array([x for x in sorted(os.listdir(path)) if x.split(".")[-1] == "png"])
+
+    # this does not work for indexed filenames because of the american sorting of files
+    # the iteration will thus not match the order in the properties.csv
+    #return np.array([x for x in sorted(os.listdir(path)) if x.split(".")[-1] == "png"])
+
+    # new version first takes image name from the properties.csv (without suffix)
+    properties = tools.csv_to_df(output_dir, "properties.csv")
+    return np.array(properties["index"].tolist())
 
 
 def create_arbitrary_image_ds(image_dir, output_dir, image_list=None):
-    deep_feats, image_list, img_tuple_resized = feature_extraction_of_arbitrary_image_ds(image_dir,image_list)
+    deep_feats, image_list, img_tuple_resized = feature_extraction_of_arbitrary_image_ds(image_dir, output_dir, image_list)
 
     with open(os.path.join(output_dir,'features.pkl'),'wb') as f:
         pkl.dump(deep_feats,f)
@@ -64,13 +72,13 @@ def create_arbitrary_image_ds(image_dir, output_dir, image_list=None):
 
 
 # deep_feats from vgg16, image_list, img_tuple_resized rgb
-def feature_extraction_of_arbitrary_image_ds(image_dir, image_list=None):
+def feature_extraction_of_arbitrary_image_ds(image_dir, output_dir, image_list=None):
     if image_list is None:
-        image_list = get_files_of_type(image_dir,'jpg')
+        image_list = get_files_of_type(image_dir, output_dir, 'jpg')
     print(image_list)
     image_paths = []
     for i in image_list:
-        image_paths.append(os.path.join(image_dir, i))
+        image_paths.append(os.path.join(image_dir, i, '.png'))
 
     img_tuple = read_images(image_paths)
     img_tuple_rgb = convert_image_tuple_to_rgb(img_tuple)

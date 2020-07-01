@@ -11,6 +11,6 @@ echo "computing on $(nvidia-smi --query-gpu=gpu_name --format=csv -i $CUDA_DEVIC
 #cd /media/compute/vol/tensorflow 
 source ~/.bashrc
 source activate hans
-python3 data_preprocessing.py "dataset01/" # hier kommt dein code aufruf hin
+python3 data_preprocessing.py "dataset02/" # hier kommt dein code aufruf hin
 source deactivate
 echo "done"
