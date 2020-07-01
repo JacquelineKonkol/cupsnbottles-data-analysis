@@ -5,7 +5,7 @@ import os
 import pickle as pkl
 import pandas as pd
 from PIL import Image
-from tools.config_loader import config
+from tools.settings import config
 
 config = config()
 

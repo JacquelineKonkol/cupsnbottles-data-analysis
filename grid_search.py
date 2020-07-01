@@ -1,30 +1,18 @@
 # TODO generalize so different datasets can be used
 from sklearn import model_selection
-
-import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import tools.basics as tools
-
 print(__doc__)
 import pandas as pd
-import numpy as np
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+import tools.settings as settings
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
 import os
-from tools.config_loader import config
-from glvq import *
+
 
 ################################################################################
 ####################################specify#####################################
-config = config()
+config = settings.config()
 
 classifier = "glvq"
 dims = None # number of dimensions to reduce to before training
@@ -32,42 +20,7 @@ dims_method = None
 #dims_method = 'pca'
 #dims_method = 'tsne'
 
-''' Entfällt
-path_dataset = "dataset01/"
-path_trained_classifiers = 'trained_classifiers/' # specify where trained classifiers should be saved to
-path_best_params = 'classifiers_best_params/' # specify where best parameters should be saved to
-
-classifier_names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
-          "Decision Tree", "Random Forest", "Neural Net", "Naive Bayes", "QDA", "GLVQ"]
-
-
-# can be adjusted
-parameters = [
-    {'n_neighbors': [2, 5, 10], 'weights': ['uniform', 'distance'], 'algorithm': ['auto', 'brute']}, # K Nearest Neighbors
-    {'kernel':['linear'], 'C': [1, 5, 10], 'probability': [True], 'random_state':[17, 42]}, # Linear SVM (predict_proba with Platt scaling)
-    {'kernel':['rbf'], 'C':[1, 5, 10], 'probability': [True], 'random_state':[17, 42]}, # RBF SVM (predict_proba with Platt scaling)
-    {'random_state':[17, 42]}, # Gaussian Process
-    {'max_depth':[None, 5, 10], 'min_samples_split': [2, 5, 10], 'random_state':[17, 42]}, # Decision Tree
-    {'max_depth':[None, 5, 10], 'n_estimators':[10, 50, 100], 'max_features':[1], 'random_state':[17, 42]}, # Random Forest
-    {'alpha': [0.0001, 0.001], 'max_iter': [1000, 2000], 'random_state':[17, 42]}, # Neural Net
-    {}, # Naive Bayes
-    #{'var_smoothing': [1e-9]}, # Naive Bayes this does not work eventough it's the default value
-    {'reg_param': [0.0, 0.5],'tol': [1.0e-2, 1.0e-4, 1.0e-6]}] # Quadratic Discriminant Analysis
-    #{} #{'max_iter':[2500, 5000], 'beta':[1, 2], 'random_state':[17, 42]}] # qlvq
-'''
-#TODO Dict über namen statt Positionen im Array
-classifiers = [
-     KNeighborsClassifier(),
-     SVC(),
-     SVC(),
-     GaussianProcessClassifier(),
-     DecisionTreeClassifier(),
-     RandomForestClassifier(),
-     MLPClassifier(),
-     GaussianNB(),
-     QuadraticDiscriminantAnalysis(),
-     glvq()
-]
+classifiers = settings.get_classifiers()
 
 
 

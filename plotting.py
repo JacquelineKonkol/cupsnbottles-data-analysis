@@ -66,7 +66,8 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
              the two and the classification confidence for each prediction
     :returns: embedded data in n-dim
     """
-
+    if num_samples == 0: num_samples = len(X)
+    print(num_samples)
     colors = np.array(["black", "grey", "orange", "darkred", "orchid",
                        "lime", "lightgrey", "red", "green", "#bcbd22", "c"])
     gt_colors = colors[y_gt[:num_samples]]
