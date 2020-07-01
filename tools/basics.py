@@ -74,3 +74,6 @@ def load_images(path, indices):
     for i in indices:
         imgs.append(Image.open(os.path.join(path, 'images', i + '.' + suffix)))
     return imgs
+
+def csv_to_df(path, file):
+    return pd.read_csv(os.path.join(path,file))
