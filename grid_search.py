@@ -20,12 +20,13 @@ from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
 import os
 from tools.config_loader import config
+from glvq import *
 
 ################################################################################
 ####################################specify#####################################
 config = config()
 
-classifier = "nearest_neighbors"
+classifier = "glvq"
 dims = None # number of dimensions to reduce to before training
 dims_method = None
 #dims_method = 'pca'
@@ -64,7 +65,9 @@ classifiers = [
      RandomForestClassifier(),
      MLPClassifier(),
      GaussianNB(),
-     QuadraticDiscriminantAnalysis()]
+     QuadraticDiscriminantAnalysis(),
+     glvq()
+]
 
 
 
@@ -81,10 +84,35 @@ def save_grid_search_results(clf, classifier_name):
     result_df = pd.DataFrame.from_dict(clf.cv_results_)
     result_df.insert(0, "Params", clf.cv_results_['params'], True)
     result_df.to_csv(result_path_params + "grid_search_" + classifier_name.replace(' ', '_') + ".csv", mode='w', sep=";", index=False)
-    dump(clf, result_path_clf + classifier.replace(' ', '_') + '.joblib')
-    dump(clf.best_params_, result_path_params+ classifier.replace(' ', '_') + '_params.joblib')
+    dump(clf, result_path_clf + classifier_name.replace(' ', '_') + '.joblib')
+    dump(clf.best_params_, result_path_params+ classifier_name.replace(' ', '_') + '_params.joblib')
 
     print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_, ' with score: ', clf.best_score_)
+
+
+def run_glvq(X, y):
+    # Todo gridsearch
+    clf_index = config.classifier_names.index("glvq")
+    clf = classifiers[clf_index]
+    X_train, X_test, y_train, y_test= model_selection.train_test_split(X, y, test_size=0.33, random_state=42)
+    clf.fit(X_train, y_train)
+
+    result_path_params = os.path.join(config.path_best_params, config.path_dataset)
+    if not os.path.isdir(result_path_params):
+        os.mkdir(result_path_params)
+
+    result_path_clf = os.path.join(config.path_trained_classifiers, config.path_dataset)
+    if not os.path.isdir(result_path_clf):
+        os.mkdir(result_path_clf)
+
+    dump(clf, result_path_clf + "glvq" + '.joblib')
+    dump(config.parameters_grid_search[clf_index], result_path_params + "glvq" + '_params.joblib')
+
+    print("glvq" + ' with train score: ',
+          clf.score(X_train, y_train))
+
+    print("glvq" + ' with test score: ',
+          clf.score(X_test, y_test))
 
 
 def grid_search(X, y, label_names, classifier=None):
@@ -101,23 +129,28 @@ def grid_search(X, y, label_names, classifier=None):
 
     # perform grid search over specified classifier
     if classifier is not None:
+        if (classifier == "glvq"):
+            run_glvq(X,y)
 
-        clf_index = config.classifier_names.index(classifier)
-        clf = GridSearchCV(classifiers[clf_index], config.parameters_grid_search[clf_index], return_train_score=True)
-        #clf = classifiers[clf_index]
-        clf.fit(X, y)
-        gs_classifiers.append(clf)
-        save_grid_search_results(clf, classifier)
-        print('>> DONE')
+        else:
+            clf_index = config.classifier_names.index(classifier)
+            clf = GridSearchCV(classifiers[clf_index], config.parameters_grid_search[clf_index], return_train_score=True)
+            #clf = classifiers[clf_index]
+            clf.fit(X, y)
+            gs_classifiers.append(clf)
+            save_grid_search_results(clf, classifier)
+            print('>> DONE')
 
     # perform grid search over all classifier
     else:
         for i, classifier in enumerate(classifiers):
-
-            clf = GridSearchCV(classifier, config.parameters_grid_search[i], return_train_score=True)
-            clf.fit(X, y)
-            gs_classifiers.append(clf)
-            save_grid_search_results(clf, config.classifier_names[i])
+            if (config.classifier_names[i] == "glvq"):
+                run_glvq(X, y)
+            else:
+                clf = GridSearchCV(classifier, config.parameters_grid_search[i], return_train_score=True)
+                clf.fit(X, y)
+                gs_classifiers.append(clf)
+                save_grid_search_results(clf, config.classifier_names[i])
         print('>> DONE')
 
     return gs_classifiers

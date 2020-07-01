@@ -11,7 +11,27 @@ import os
 from scipy.stats import norm
 import random
 from collections import Counter
-#TODO
+
+
+def weighted_choice(c,n,p,replace=False,reverse=False):
+    """c: candidates, n: number of draws, p: probability, reverse: revert proba"""
+    p = p + 0.01 # this is needed to prevent division by zero errors
+    pn = p / np.sum(p)
+    if reverse:
+        pn = (1 / pn)
+        pn /= np.sum(pn)
+    return np.random.choice(c,n,p=pn,replace=replace)
+
+
+def get_proba_from_dists(d):
+    d = np.array(d) + 0.01 # this is needed to prevent division by zero errors
+    dn = d / np.sum(d)
+    dn = (1 / dn)
+    dn /= np.sum(dn)
+    return dn
+
+
+
 class glvq():
 
     def __init__(self,max_prototypes_per_class=5,learning_rate=2,strech_factor=1,placement_strategy=None, move_only_winner=False, set_winner=False, inhibit_wminus=False, inhibit_wminus_params={'std_dev': 1, 'min_update': 0.05, 'inhibition_step': 1}, buffered=False, buffer_size=50,buffer_proba=0.5, weighted_rand_winner_selection=False, weighted_rand_looser_selection=False, knn=None):
@@ -139,7 +159,6 @@ class glvq():
                 winner_mask = self.labels == yi
                 winner_dists = proto_dist[winner_mask]
                 winner_is = np.where(winner_mask)[0]
-                from common.math_helper import weighted_choice
                 try:
                     w1i = weighted_choice(winner_is, 1, winner_dists, True, True)[0]
                 except ValueError:
@@ -151,7 +170,6 @@ class glvq():
                 looser_mask = self.labels != yi
                 looser_dists = proto_dist[looser_mask]
                 looser_is = np.where(looser_mask)[0]
-                from common.math_helper import weighted_choice
                 w2i = weighted_choice(looser_is, 1, looser_dists, True, True)[0]
 
 
@@ -221,7 +239,6 @@ class glvq():
             if full_matrix:
                 protos = self.get_win_loose_prototypes(d,num_classes)
                 # proto_relsims = np.zeros((num_classes))
-                from common.math_helper import get_proba_from_dists
                 proto_relsims = get_proba_from_dists([d[i] for i in protos])
                 ## old faulty code
                 # # step through the loosers and calculate relsim for all to get full certainty matrix
@@ -337,4 +354,5 @@ if __name__ == '__main__':
     print(b.predict(x_test))
     print(y_test)
     print(b.predict_proba_full_matrix(x_test))
+    print(b.predict_proba(x_test))
     print('score: '+str(b.score(x_test,y_test)))
