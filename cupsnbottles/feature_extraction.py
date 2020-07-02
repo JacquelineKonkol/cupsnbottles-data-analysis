@@ -78,7 +78,7 @@ def feature_extraction_of_arbitrary_image_ds(image_dir, output_dir, image_list=N
     print(image_list)
     image_paths = []
     for i in image_list:
-        image_paths.append(os.path.join(image_dir, i, '.png'))
+        image_paths.append(os.path.join(image_dir, str(i) + '.png'))
 
     img_tuple = read_images(image_paths)
     img_tuple_rgb = convert_image_tuple_to_rgb(img_tuple)
@@ -161,6 +161,8 @@ def convert_image_tuple_to_rgb(imgs):
     for i in range(len(imgs)):
         if is_bw_image(imgs[i]):
             imgs[i] = convert_bw_to_rgb(imgs[i])
+        elif imgs[i].ndim == 3 and imgs[i].shape[2] == 4:
+            imgs[i] = imgs[i][...,:3]
     return imgs
 
 

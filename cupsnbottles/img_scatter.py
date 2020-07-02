@@ -28,7 +28,8 @@ def imageScatter(x,y,imgs,cls=None,probs=None,labels=None,ax=None,img_scale=(50,
         if type(imgs[ind]) == PIL.JpegImagePlugin.JpegImageFile:
             img = imgs[ind].resize(img_scale,resample=PIL.Image.BICUBIC)
         else:
-            img = imresize(imgs[ind],img_scale)
+            #img = imresize(imgs[ind],img_scale)
+            img = np.array(PIL.Image.fromarray(imgs[ind]).resize(img_scale))
         if cls is not None:
             img = frameImage(img,clsCols[classInd[ind]],frame_width,3,True)
         if probs is not None:
@@ -75,4 +76,3 @@ def frameImage(img,col,bw=2,side=15,image_scale_up=False):
         if side & 4: nimg[-bw:,:,i] = c
         if side & 8: nimg[:,-bw:,i] = c
     return nimg
-

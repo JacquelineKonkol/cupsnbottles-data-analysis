@@ -70,8 +70,8 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
     print(num_samples)
     colors = np.array(["black", "grey", "orange", "darkred", "orchid",
                        "lime", "lightgrey", "red", "green", "#bcbd22", "c"])
-    gt_colors = colors[y_gt[:num_samples]]
-    pred_colors = colors[y_pred[:num_samples]]
+    gt_colors = colors[y_gt]
+    pred_colors = colors[y_pred]
     diff_colors = np.array(['darkgrey']*len(y_gt))
     diff_colors[pred_colors != gt_colors] = 'red'
     plotcolors = [gt_colors, pred_colors, diff_colors]

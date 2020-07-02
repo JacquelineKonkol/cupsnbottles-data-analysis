@@ -14,6 +14,7 @@ import pandas as pd
 import tools.settings as settings
 ################################################################################
 ####################################specify#####################################
+
 config = settings.config()
 classifiers = settings.get_classifiers()
 classifier = "glvq" # look up in classifier_names list
@@ -37,7 +38,7 @@ def prepare_clf(X_train, y_train):
     return clf
 
 
-def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score):
+def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames):
     # plotting t-SNE
     title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
 
@@ -67,14 +68,14 @@ def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y,
                                        title='Normalized confusion matrix', cmap=plt.cm.Greens)
 
 
-
     if (pred_proba is not None):
         print(config.num_samples)
         X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, config.num_samples,
                                          classifier,
                                          "cupsnbottles", dims)
-        imgs = tools.load_images(config.path_dataset, inds[indices])
+        imgs = tools.load_images(config.path_dataset, inds[indices], filenames)
         plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
+
 
 
 #TODO umstrukturieren
@@ -130,7 +131,76 @@ def main():
 
     y_pred = clf.predict(X_test).astype('int32')
     y_pred_train = clf.predict(X_train).astype('int32')
+
+    ### TEMP
+    # indicesVanilla, indicesOverlap, indicesAmbiguous, indicesBoth = tools.categorize_data(df)
+    # X_train_without_ambiguous = X_train[], y_train[]
+    # X_train_only_ambiguous, y_train_only_ambiguous = X_train[indicesAmbiguous], y_train[indicesAmbiguous]
+    # X_test_without_ambiguous = X_test[], y_test[]
+    # X_test_only_ambiguous = X_test[], y_test[]
+
+    X_train_without_ambiguous = []
+    X_train_only_ambiguous = []
+    X_test_without_ambiguous = []
+    X_test_only_ambiguous = []
+
+    y_train_without_ambiguous = []
+    y_train_only_ambiguous = []
+    y_test_without_ambiguous = []
+    y_test_only_ambiguous = []
+
+    #training = 'mixed'
+    #training = 'ambiguous only'
+    training = 'without ambiguous'
+
+    #testing = 'mixed'
+    testing = 'ambiguous only'
+    #testing = 'without ambiguous'
+
+    filenames_train = np.array(indx_train).tolist()
+    filenames_test = np.array(indx_test).tolist()
+
+    for i, row in df.iterrows():
+        if row['ambiguous'] == 1:
+            print('count')
+            if row['index'] in filenames_train:
+                X_train_only_ambiguous.append(X_train[filenames_train.index(row['index'])])
+                y_train_only_ambiguous.append(y_train[filenames_train.index(row['index'])])
+            else:
+                X_test_only_ambiguous.append(X_test[filenames_test.index(row['index'])])
+                y_test_only_ambiguous.append(y_test[filenames_test.index(row['index'])])
+        elif row['ambiguous'] == 0:
+            if row['index'] in filenames_train:
+                X_train_without_ambiguous.append(X_train[filenames_train.index(row['index'])])
+                y_train_without_ambiguous.append(y_train[filenames_train.index(row['index'])])
+            else:
+                X_test_without_ambiguous.append(X_test[filenames_test.index(row['index'])])
+                y_test_without_ambiguous.append(y_test[filenames_test.index(row['index'])])
+
+
+    if training == 'ambiguous only':
+        X_train = X_train_only_ambiguous
+        y_train = y_train_only_ambiguous
+    elif training == 'without ambiguous':
+        X_train = X_train_without_ambiguous
+        y_train = y_train_without_ambiguous
+    if testing == 'ambiguous only':
+        X_test = X_test_only_ambiguous
+        y_test = y_test_only_ambiguous
+    elif testing == 'without ambiguous':
+        X_test = X_test_without_ambiguous
+        y_test = y_test_without_ambiguous
+    ### TEMP
+
+    print(y_train)
+    print(y_test)
+
+    clf = prepare_clf(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    y_pred_train = clf.predict(X_train)
+
     score = clf.score(X_test, y_test)
+
 
     if classifier == "glvq":
         pred_proba = clf.predict_proba(X_test)
