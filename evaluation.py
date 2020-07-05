@@ -17,7 +17,7 @@ import tools.settings as settings
 
 config = settings.config()
 classifiers = settings.get_classifiers()
-classifier = "glvq" # look up in classifier_names list
+classifier = "nearest_neighbors" # look up in classifier_names list
 use_pretrained_classifier = False
 imgs_falsely_classified = False # only misclassified images are used in                         #
 dims = 2
@@ -77,13 +77,22 @@ def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y,
         plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
 
 
+def create_filter_maske(y_test, y_pred, pred_proba, mode="all_test_samples", confidence_threshold = 0.7):
 
-#TODO umstrukturieren
-def calculate_cluster_mean(X_embedded, y_test, label_names):
+    if mode == "wrong_test_samples":
+        filter = y_test != y_pred
+    elif mode == "unconfident_test_samples":
+        filter = pred_proba < confidence_threshold
+    else:
+        filter = np.ones(y_test.shape, dtype=bool)  # default take all test samples
+    return filter
+
+
+def calculate_cluster_mean(X_2dim, y, label_names):
     cluster_infos = {}
     for i in range(len(label_names)):
-        X_class_indx =  y_test == i
-        X_selected = X_embedded[X_class_indx]
+        X_class_indx =  y == i
+        X_selected = X_2dim[X_class_indx]
         mean = np.mean(X_selected, axis=0)
         var = np.var(X_selected, axis=0)
         cluster_infos[i] = {'mean':mean, "var":var}
@@ -91,29 +100,33 @@ def calculate_cluster_mean(X_embedded, y_test, label_names):
     return cluster_infos
 
 
-#TODO umstrukturieren
-def analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, indx_test):
+def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, indx_test):
+    float_formatter = "{:.2f}".format
+    np.set_printoptions(formatter={'float_kind': float_formatter})
+
     X_embedded = tools.t_sne(X)
-    cluster_means = calculate_cluster_mean(X_embedded, y_encoded, label_names)
+    cluster_means = calculate_cluster_mean(X_embedded, y_train, label_names)
 
-    falsePredict = y_test != y_pred
-    true_labelnames = [label_names[i] for i in y_test[falsePredict]]
-    predict_labelnames = [label_names[i] for i in y_pred[falsePredict].astype(int)]
-    IDs = [indx_test[i] for i, value in enumerate(falsePredict) if value]
+    filter_mask = create_filter_maske(y_test, y_pred, pred_proba, mode="all_test_samples") # possible modes: all_test_samples, wrong_test_samples, unconfident_test_samples
+    true_labelnames = [label_names[i] for i in y_test[filter_mask]]
+    predict_labelnames = [label_names[i] for i in y_pred[filter_mask].astype(int)]
+    IDs = [indx_test[i] for i, value in enumerate(filter_mask) if value]
 
-    dataFalsePredict = {'ids': IDs,
-                        'True Label':y_test[falsePredict],
+    dataFalsePredict = {'IDs': IDs,
+                        'True Label':y_test[filter_mask],
                         'True Labelname': true_labelnames,
-                        'Predict Label':y_pred[falsePredict].astype(int),
+                        'Predict Label':y_pred[filter_mask].astype(int),
                         'Predict Labelname': predict_labelnames
                         }
 
     if pred_proba is not None:
-        dataFalsePredict['Predict Prob.'] = pred_proba[falsePredict]
+        dataFalsePredict['Predict Prob.'] = pred_proba[filter_mask]
 
     for i in range(0, len(label_names)):
-        key ='Dist to Cluster ' + str(i)
+        key ='Dist to Cluster ' + label_names[i]
         dataFalsePredict[key] = ["{:.3f}".format(float(np.linalg.norm(point-cluster_means[i]['mean']))).replace(".", ",") for point in X_embedded[IDs]]
+        key = 'Predict Prob. ' + label_names[clf.classes_[i]]
+        dataFalsePredict[key] = pred_proba_all[filter_mask][:, clf.classes_[i]]
 
     df = pd.DataFrame(dataFalsePredict, columns=dataFalsePredict.keys())
     if not os.path.isdir("evaluation"):
@@ -123,14 +136,8 @@ def analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, indx
 
 
 def main():
-    X, y_encoded, y, label_names, df = tools.load_gt_data(config.num_samples, config.path_dataset)
-    indx = list(range(len(X)))
-    X_train, X_test, y_train, y_test, indx_train, indx_test= model_selection.train_test_split(X, y_encoded, indx, test_size=0.33, random_state=42)
-
-    clf = prepare_clf(X_train, y_train)
-
-    y_pred = clf.predict(X_test).astype('int32')
-    y_pred_train = clf.predict(X_train).astype('int32')
+    X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
+    X_train, X_test, y_train, y_test, filenames_train, filenames_test= model_selection.train_test_split(X, y_encoded, filenames, test_size=0.33, random_state=42)
 
     ### TEMP
     # indicesVanilla, indicesOverlap, indicesAmbiguous, indicesBoth = tools.categorize_data(df)
@@ -157,8 +164,11 @@ def main():
     testing = 'ambiguous only'
     #testing = 'without ambiguous'
 
-    filenames_train = np.array(indx_train).tolist()
-    filenames_test = np.array(indx_test).tolist()
+    filenames_train = filenames_train.tolist()
+    filenames_test = filenames_test.tolist()
+
+    filenames_train_ambiguous = []
+    filenames_test_ambiguous = []
 
     for i, row in df.iterrows():
         if row['ambiguous'] == 1:
@@ -166,9 +176,11 @@ def main():
             if row['index'] in filenames_train:
                 X_train_only_ambiguous.append(X_train[filenames_train.index(row['index'])])
                 y_train_only_ambiguous.append(y_train[filenames_train.index(row['index'])])
+                filenames_train_ambiguous.append(filenames[row['index']])
             else:
                 X_test_only_ambiguous.append(X_test[filenames_test.index(row['index'])])
                 y_test_only_ambiguous.append(y_test[filenames_test.index(row['index'])])
+                filenames_test_ambiguous.append(filenames[row['index']])
         elif row['ambiguous'] == 0:
             if row['index'] in filenames_train:
                 X_train_without_ambiguous.append(X_train[filenames_train.index(row['index'])])
@@ -177,30 +189,29 @@ def main():
                 X_test_without_ambiguous.append(X_test[filenames_test.index(row['index'])])
                 y_test_without_ambiguous.append(y_test[filenames_test.index(row['index'])])
 
-
+    print(y_train_only_ambiguous)
     if training == 'ambiguous only':
-        X_train = X_train_only_ambiguous
-        y_train = y_train_only_ambiguous
+        X_train = np.array(X_train_only_ambiguous)
+        y_train = np.array(y_train_only_ambiguous)
     elif training == 'without ambiguous':
-        X_train = X_train_without_ambiguous
-        y_train = y_train_without_ambiguous
+        X_train = np.array(X_train_without_ambiguous)
+        y_train = np.array(y_train_without_ambiguous)
     if testing == 'ambiguous only':
-        X_test = X_test_only_ambiguous
-        y_test = y_test_only_ambiguous
+        print(y_train_only_ambiguous)
+        X_test = np.array(X_test_only_ambiguous + X_train_only_ambiguous)
+        y_test = np.array(y_test_only_ambiguous + y_train_only_ambiguous)
+        filenames1 = filenames_test_ambiguous + filenames_train_ambiguous
     elif testing == 'without ambiguous':
-        X_test = X_test_without_ambiguous
-        y_test = y_test_without_ambiguous
+        X_test = np.array(X_test_without_ambiguous)
+        y_test = np.array(y_test_without_ambiguous)
     ### TEMP
 
-    print(y_train)
-    print(y_test)
-
     clf = prepare_clf(X_train, y_train)
-    y_pred = clf.predict(X_test)
-    y_pred_train = clf.predict(X_train)
+
+    y_pred = clf.predict(X_test).astype('int32')
+    y_pred_train = clf.predict(X_train).astype('int32')
 
     score = clf.score(X_test, y_test)
-
 
     if classifier == "glvq":
         pred_proba = clf.predict_proba(X_test)
@@ -209,8 +220,8 @@ def main():
         pred_proba_all = clf.predict_proba(X_test)
         pred_proba = np.max(pred_proba_all, axis=1)
 
-    #analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, indx_test)
-    visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score)
+    analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames1)
+    #visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames)
 
 
 if __name__ == "__main__":
