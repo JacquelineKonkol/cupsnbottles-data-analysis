@@ -95,26 +95,63 @@ def load_images(path, indices, filenames):
 def csv_to_df(path, file):
     return pd.read_csv(os.path.join(path,file))
 
-def categorize_data(df):
-    indicesAmbiguous = df.loc[df.ambiguous == 1]
-    indicesOverlap = df.loc[df.overlap == 1]
-    indicesVanilla = df.loc[(df.ambiguous == 0) & (df.overlap == 0)]
-    indicesBoth = df.loc[(df.ambiguous == 1) & (df.overlap == 1)]
-    return indicesVanilla, indicesOverlap, indicesAmbiguous, indicesBoth
 
-def adjust_dataset(X, filenames, df, ambiguous_perc_train, overlap_perc_train, ambiguous_perc_test, overlap_perc_test):
-    indicesVanilla, indicesOverlap, indicesAmbiguous, indicesBoth = categorize_data(df)
-    nb_train = int(2/3 * len(X))
-    nb_test = int(1/3 * len(X))
-    nb_samples_ambiguous_train = int(ambiguous_perc_train/100 * nb_train)
-    nb_samples_overlap_train = int(overlap_perc_train/100 * nb_train)
-    nb_samples_ambiguous_test = int(ambiguous_perc_test/100 * nb_test)
-    nb_samples_overlap_test = int(overlap_perc_test/100 * nb_test)
-    nb_samples_vanilla_train = nb_train - nb_samples_ambiguous_train - nb_samples_overlap_train
-    nb_samples_vanilla_test = nb_test - nb_samples_ambiguous_test - nb_samples_overlap_test
+def adjust_dataset(X, y_encoded, filenames, df):
 
-    np.random.choice(indicesAmbiguous, nb_samples_ambiguous_train)
-    np.random.choice(indicesOverlap, nb_samples_overlap_train)
+    ### TODO wie soll der Fall both gehändelt werden?
 
-    #X_train, X_test, y_train, y_test, indx_train, indx_test= model_selection.train_test_split(X, y_encoded, indx, test_size=0.33, random_state=42)
-    pass
+    # determine sample categories
+    indicesAmbiguous = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 0)]["index"])
+    indicesOverlap = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 1)]["index"])
+    indicesVanilla = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 0)]["index"])
+    indicesBoth = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 1)]["index"])
+
+    maskAmbiguous = np.array((df['ambiguous'] == 1) & (df['overlap'] == 0))
+    maskOverlap = np.array((df['ambiguous'] == 0) & (df['overlap'] == 1))
+    maskVanilla = np.array((df['ambiguous'] == 0) & (df['overlap'] == 0))
+    maskBoth = np.array((df['ambiguous'] == 1) & (df['overlap'] == 1))
+
+    # shuffle dataset
+    nb_all = len(X)
+    print('Total available samples: ', nb_all)
+    shuffler = np.random.permutation(nb_all)
+    X, y_encoded, filenames = X[shuffler], y_encoded[shuffler], filenames[shuffler]
+    maskVanilla, maskAmbiguous, maskOverlap, maskBoth = maskVanilla[shuffler], maskAmbiguous[shuffler], maskOverlap[shuffler], maskBoth[shuffler]
+
+    # split each category into train and test according to requested proportion
+    X_train, y_train, filenames_train = [], [], []
+    X_test, y_test, filenames_test = [], [], []
+
+    categories = ['vanilla', 'ambiguous', 'overlap', 'both']
+    lengths = [len(indicesVanilla), len(indicesAmbiguous), len(indicesOverlap), len(indicesBoth)]
+    X_sets = [X[maskVanilla], X[maskAmbiguous], X[maskOverlap], X[maskBoth]]
+    y_sets = [y_encoded[maskVanilla], y_encoded[maskAmbiguous], y_encoded[maskOverlap], y_encoded[maskBoth]]
+    filenames_sets = [filenames[maskVanilla], filenames[maskAmbiguous], filenames[maskOverlap], filenames[maskBoth]]
+    train_parts = [config.vanilla_train_part, config.ambiguous_train_part, config.overlap_train_part, config.both_train_part]
+    test_parts = [config.vanilla_test_part, config.ambiguous_test_part, config.overlap_test_part, config.both_test_part]
+
+    # for both training and testing
+    for i in range(2):
+        # add every category according to requested proportion
+        for category, _ in enumerate(X_sets):
+            # add training part of category to training variables
+            if i == 0:
+                print('Using ' + str(int(round(train_parts[category] * lengths[category]))) + ' samples from ' + categories[category] + " in training.")
+                X_train.extend(X_sets[category][:int(round(train_parts[category] * lengths[category]))])
+                y_train.extend(y_sets[category][:int(round(train_parts[category] * lengths[category]))])
+                filenames_train.extend(filenames_sets[category][:int(round(train_parts[category] * lengths[category]))])
+            # add testing part of category to testing variables
+            else:
+                print('Using ' + str(int(round(test_parts[category] * lengths[category]))) + ' samples from ' + categories[category] + " in testing.")
+                X_test.extend(X_sets[category][-int(round(test_parts[category] * lengths[category])):])
+                y_test.extend(y_sets[category][-int(round(test_parts[category] * lengths[category])):])
+                filenames_test.extend(filenames_sets[category][-int(round(test_parts[category] * lengths[category])):])
+    print('Total used samples: ', len(y_train)+len(y_test))
+
+    # shuffle again
+    shuffler_train = np.random.permutation(len(X_train))
+    shuffler_test = np.random.permutation(len(X_test))
+    X_train, y_train, filenames_train = np.array(X_train)[shuffler_train], np.array(y_train)[shuffler_train], np.array(filenames_train)[shuffler_train]
+    X_test, y_test, filenames_test = np.array(X_test)[shuffler_test], np.array(y_test)[shuffler_test], np.array(filenames_test)[shuffler_test]
+
+    return X_train, X_test, y_train, y_test, filenames_train, filenames_test
