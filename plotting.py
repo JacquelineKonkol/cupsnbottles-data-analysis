@@ -130,7 +130,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
 ########### TODO
 def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba, classifier):
     """
-    :param: X_embedded = should be 2D
+    :param: X_embedded = should be a 2D embedding of the whole dataset
     :param: df = dataframe containing the images load_properties
     :param: imgs = images to include into the scatterplot
     :param: indices = of the images to include
@@ -150,7 +150,7 @@ def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba, classifier)
 
     fig = plt.figure()
     artists = img_scatter.imageScatter(X_embedded[indices, 0],
-                         X_embedded[indices, 1],imgs,img_scale=(20,20))
+                                       X_embedded[indices, 1],imgs,img_scale=(20,20))
 
 
     fig.suptitle(title, fontsize=20)

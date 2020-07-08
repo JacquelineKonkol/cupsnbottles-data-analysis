@@ -29,7 +29,7 @@ def imageScatter(x,y,imgs,cls=None,probs=None,labels=None,ax=None,img_scale=(50,
             img = imgs[ind].resize(img_scale,resample=PIL.Image.BICUBIC)
         else:
             #img = imresize(imgs[ind],img_scale)
-            img = np.array(PIL.Image.fromarray(imgs[ind]).resize(img_scale))
+            img = np.array(PIL.Image.fromarray(imgs[ind][...,:3]).resize(img_scale))
         if cls is not None:
             img = frameImage(img,clsCols[classInd[ind]],frame_width,3,True)
         if probs is not None:

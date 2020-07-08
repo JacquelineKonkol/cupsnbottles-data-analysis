@@ -35,7 +35,6 @@ def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
     # to load the original cupsnbottles dataset
     elif path == "cupsnbottles/":
          X = load_cupsnbottles.load_features(path)
-         print(X)
          df = load_cupsnbottles.load_properties(path)
          y = np.array(df.label)
          y_encoded = y.copy()
@@ -44,7 +43,7 @@ def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
              y_encoded[y == label] = i
          y_encoded = y_encoded.astype(int)
 
-    elif path == "dataset02/":
+    else:
         X = open_pkl(path, 'features.pkl')
         properties = csv_to_df(path, 'properties.csv')
         y = np.array(properties.object_class)
@@ -58,8 +57,6 @@ def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
 
     if num_samples == 0:
         num_samples = len(X)
-    #label_names = np.unique(y[:num_samples])
-    #print(label_names)
 
     return X[:num_samples], y_encoded[:num_samples], y[:num_samples], label_names, df[:num_samples], filenames[:num_samples]
 
@@ -84,12 +81,13 @@ def load_images(path, indices, filenames):
     Loads images/ of dataset with any suffix
     :param: path = path of the dataset, containing the images/ folder
     :param: indices = indices of the images to open
+    :param: filenames = should be the same order as indices
     :returns: loaded images as a list
     """
     suffix = os.listdir(os.path.join(path, 'images'))[0].split(".")[-1]
     imgs = []
     for i in indices:
-        imgs.append(Image.open(os.path.join(path, 'images', str(filenames[i]) + '.' + str(suffix))))
+        imgs.append(np.array(Image.open(os.path.join(path, 'images', str(filenames[i]) + '.' + str(suffix)))))
     return imgs
 
 def csv_to_df(path, file):
@@ -97,8 +95,18 @@ def csv_to_df(path, file):
 
 
 def adjust_dataset(X, y_encoded, filenames, df):
+    """
+    Considers the data categories vanilla, ambiguous, overlap and both (i.e. ambiguous and overlap)
+    and uses information given in config [DATASET] to split training and testing data according to
+    the desired propotions of each category
+    :param: X = raw data matrix
+    :param: y_encoded = labels of x as integers
+    :param: filenames = also correspond to the index the image can be found in X
+    :param: df = pandas dataframe of the meta-data given in properties.csv
+    :returns:
+    """
 
-    ### TODO wie soll der Fall both gehändelt werden?
+    ### TODO soll der Fall both anders gehändelt werden?
 
     # determine sample categories
     indicesAmbiguous = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 0)]["index"])
@@ -112,9 +120,9 @@ def adjust_dataset(X, y_encoded, filenames, df):
     maskBoth = np.array((df['ambiguous'] == 1) & (df['overlap'] == 1))
 
     # shuffle dataset
-    nb_all = len(X)
-    print('Total available samples: ', nb_all)
-    shuffler = np.random.permutation(nb_all)
+    print('>> Preparing Dataset')
+    print('Total available samples: ', len(X))
+    shuffler = np.random.permutation(len(X))
     X, y_encoded, filenames = X[shuffler], y_encoded[shuffler], filenames[shuffler]
     maskVanilla, maskAmbiguous, maskOverlap, maskBoth = maskVanilla[shuffler], maskAmbiguous[shuffler], maskOverlap[shuffler], maskBoth[shuffler]
 
@@ -147,6 +155,9 @@ def adjust_dataset(X, y_encoded, filenames, df):
                 y_test.extend(y_sets[category][-int(round(test_parts[category] * lengths[category])):])
                 filenames_test.extend(filenames_sets[category][-int(round(test_parts[category] * lengths[category])):])
     print('Total used samples: ', len(y_train)+len(y_test))
+    print('Total training samples: ', len(y_train))
+    print('Total testing samples: ', len(y_test))
+    print('>> DONE Preparing Dataset')
 
     # shuffle again
     shuffler_train = np.random.permutation(len(X_train))
