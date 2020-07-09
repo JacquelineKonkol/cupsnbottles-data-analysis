@@ -25,11 +25,47 @@ class config():
             config.read(config_loc)
 
             # load config
+            # [STANDARD]
+            self.use_pretrained_classifier = True if config['STANDARD']['use_pretrained_classifier'] == 'True' else False
             self.path_dataset = config['STANDARD']['path_dataset']
             self.num_samples = int(config['STANDARD']['num_samples'])
             self.path_best_params = config['STANDARD']['path_best_params']
-            self.path_trained_classifiers = config['STANDARD']['path_trained_classifiers']
+            self.path_trained_classifiers = config['STANDARD']['path_trained_classifier']
 
+            # [DATASET]
+
+            self.normal_evaluation = True if config['DATASET']['normal_evaluation'] == 'True' else False
+            self.training = config['DATASET']['training']
+            self.testing = config['DATASET']['testing']
+            self.vanilla_train_part =  float(config['DATASET']['vanilla_train_part'])
+            self.vanilla_test_part = float(config['DATASET']['vanilla_test_part'])
+            self.ambiguous_train_part =  float(config['DATASET']['ambiguous_train_part'])
+            self.ambiguous_test_part = float(config['DATASET']['ambiguous_test_part'])
+            self.overlap_train_part =  float(config['DATASET']['overlap_train_part'])
+            self.overlap_test_part = float(config['DATASET']['overlap_test_part'])
+            self.both_train_part =  float(config['DATASET']['both_train_part'])
+            self.both_test_part = float(config['DATASET']['both_test_part'])
+
+            if self.training == "without ambiguous":
+                self.ambiguous_train_part = 0.0
+            elif self.training == "only ambiguous":
+                self.ambiguous_train_part = 1.0
+                self.vanilla_train_part = 0.0
+                self.overlap_train_part = 0.0
+                self.both_train_part = 0.0
+            else:
+                pass
+            if self.testing == "without ambiguous":
+                self.ambiguous_test_part = 0.0
+            elif self.testing == "only ambiguous":
+                self.ambiguous_test_part = 1.0
+                self.vanilla_test_part = 0.0
+                self.overlap_test_part = 0.0
+                self.both_test_part = 0.0
+            else:
+                pass
+
+            # [GRID SEARCH]
             self.classifier_names = []
             self.parameters_grid_search = []
             for key in config['GRID_SEARCH']:

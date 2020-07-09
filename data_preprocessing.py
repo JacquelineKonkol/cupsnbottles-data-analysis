@@ -1,4 +1,4 @@
-git import cupsnbottles.feature_extraction as feature_extraction
+import cupsnbottles.feature_extraction as feature_extraction
 import tools.basics as tools
 import numpy as np
 import argparse

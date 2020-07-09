@@ -18,14 +18,13 @@ import tools.settings as settings
 config = settings.config()
 classifiers = settings.get_classifiers()
 classifier = "nearest_neighbors" # look up in classifier_names list
-use_pretrained_classifier = False
 imgs_falsely_classified = False # only misclassified images are used in                         #
 dims = 2
 
 ################################################################################
 
 def prepare_clf(X_train, y_train):
-    if use_pretrained_classifier:
+    if config.use_pretrained_classifier:
         # load the desired trained classifier
         clf = load(config.path_trained_classifiers + config.path_dataset + classifier.replace(' ', '_') + ".joblib")
     else:
@@ -38,23 +37,30 @@ def prepare_clf(X_train, y_train):
     return clf
 
 
-def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames):
-    # plotting t-SNE
-    title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
+def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test):
+    """
+    Produces visualization of - confusion matrices
+                              - scatterplot collage with classification results
+                              - image scatterplots of categories of interest
+    :param X_test
+    :param X_train
+    :param y_train
+    :param y_test
+    :param y_pred_train:
+    :param y_pred:
+    :param df: pandas dataframe of the meta-data given in properties.csv
+    :param y:
+    :param label_names: list of all available classes
+    :param pred_proba:
+    :param score
+    :param filenames: also correspond to the index the image can be found in X
+    :param filenames_train:
+    :param filenames_test:
+    :return:
+    """
 
-    inds = np.array(df.index)
-    indices = None
-    # plot only misclassifications
-    if imgs_falsely_classified:
-        indices = np.argwhere(y_pred != y_test).flatten()
 
-        title_imgs = 'Images that were falsely classified by ' + classifier
-    # plot random images into the scatter
-    else:
-        imgs_to_plot = 20
-        indices = np.random.randint(0, len(y_test), (imgs_to_plot))
-        title_imgs = str(imgs_to_plot) + ' random images'
-
+    ### confusion matrices ###
     if (len(np.unique(y_train)) == len(label_names)):
         cm_train = metrics.confusion_matrix(y_train, y_pred_train)
         plotting.plot_confusion_matrix(cm_train, classes=label_names, img_name="absolute_cupsnbottles_train", cmap=plt.cm.Blues)
@@ -67,14 +73,51 @@ def visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y,
         plotting.plot_confusion_matrix(cm, classes=label_names, img_name="norm_cupsnbottles", normalize=True,
                                        title='Normalized confusion matrix', cmap=plt.cm.Greens)
 
-
+    ### t-sne scatterplot ###
     if (pred_proba is not None):
-        print(config.num_samples)
-        X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, config.num_samples,
+        title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
+        X_embedded = plotting.t_sne_plot(X, X_test, y_test, y_pred, filenames_test, pred_proba, label_names, title, config.num_samples,
                                          classifier,
                                          "cupsnbottles", dims)
-        imgs = tools.load_images(config.path_dataset, inds[indices], filenames)
-        plotting.image_conf_scatter(X_embedded, imgs, indices, title_imgs, pred_proba, classifier)
+
+        ### image scatterplots ###
+        X_all_embedded = tools.t_sne(X)
+        indices_to_plot = None
+        # image scatterplot misclassifications with frame depicting classification confidence
+        inds_misclassification = np.argwhere(y_pred != y_test).flatten()
+        if len(inds_misclassification) > 0:
+            pass
+            imgs = tools.load_images(config.path_dataset, filenames_test[inds_misclassification], filenames)
+            title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + classifier
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], title_imgs, pred_proba[inds_misclassification], classifier)
+
+        # image scatterplot ambiguous in test with frame denoting classification success
+        if config.ambiguous_test_part > 0:
+            indicesAmbiguous = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 0)]["index"])
+            indices_to_plot = np.intersect1d(indicesAmbiguous, filenames_test) # denote indices before shuffeling
+            imgs = tools.load_images(config.path_dataset, indices_to_plot, filenames)
+            title_imgs = str(len(imgs)) + ' ambiguous samples as classified by ' + classifier
+            _, inds_in_test, _ = np.intersect1d(filenames_test, indices_to_plot, return_indices=True)
+            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba[inds_in_test], classifier)
+
+        # image scatterplot overlap in test with frame denoting classification success
+        if config.overlap_test_part > 0:
+            indicesOverlap = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 1)]["index"])
+            indices_to_plot = np.intersect1d(indicesOverlap, filenames_test) # denote indices before shuffeling
+            imgs = tools.load_images(config.path_dataset, indices_to_plot, filenames)
+            title_imgs = str(len(imgs)) + ' overlap samples as classified by ' + classifier
+            _, inds_in_test, _ = np.intersect1d(filenames_test, indices_to_plot, return_indices=True)
+            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba[inds_in_test], classifier)
+
+        # image scatterplot low confidence (100 images by default)
+        if pred_proba is not None:
+            default_nb = 100
+            if len(pred_proba) < default_nb:
+                default_nb = len(pred_proba)
+            pred_proba, filenames_test = (list(t) for t in zip(*sorted(zip(pred_proba, filenames_test))))
+            imgs = tools.load_images(config.path_dataset, np.arange(default_nb), filenames_test)
+            title_imgs = str(default_nb) + ' lowest confidence samples as classified by ' + classifier
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[:default_nb], title_imgs, pred_proba[:default_nb], classifier)
 
 
 def create_filter_maske(y_test, y_pred, pred_proba, mode="all_test_samples", confidence_threshold = 0.7):
@@ -137,74 +180,14 @@ def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_p
 
 def main():
     X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
-    X_train, X_test, y_train, y_test, filenames_train, filenames_test= model_selection.train_test_split(X, y_encoded, filenames, test_size=0.33, random_state=42)
-
-    ### TEMP
-    # indicesVanilla, indicesOverlap, indicesAmbiguous, indicesBoth = tools.categorize_data(df)
-    # X_train_without_ambiguous = X_train[], y_train[]
-    # X_train_only_ambiguous, y_train_only_ambiguous = X_train[indicesAmbiguous], y_train[indicesAmbiguous]
-    # X_test_without_ambiguous = X_test[], y_test[]
-    # X_test_only_ambiguous = X_test[], y_test[]
-
-    X_train_without_ambiguous = []
-    X_train_only_ambiguous = []
-    X_test_without_ambiguous = []
-    X_test_only_ambiguous = []
-
-    y_train_without_ambiguous = []
-    y_train_only_ambiguous = []
-    y_test_without_ambiguous = []
-    y_test_only_ambiguous = []
-
-    #training = 'mixed'
-    #training = 'ambiguous only'
-    training = 'without ambiguous'
-
-    #testing = 'mixed'
-    testing = 'ambiguous only'
-    #testing = 'without ambiguous'
-
-    filenames_train = filenames_train.tolist()
-    filenames_test = filenames_test.tolist()
-
-    filenames_train_ambiguous = []
-    filenames_test_ambiguous = []
-
-    for i, row in df.iterrows():
-        if row['ambiguous'] == 1:
-            print('count')
-            if row['index'] in filenames_train:
-                X_train_only_ambiguous.append(X_train[filenames_train.index(row['index'])])
-                y_train_only_ambiguous.append(y_train[filenames_train.index(row['index'])])
-                filenames_train_ambiguous.append(filenames[row['index']])
-            else:
-                X_test_only_ambiguous.append(X_test[filenames_test.index(row['index'])])
-                y_test_only_ambiguous.append(y_test[filenames_test.index(row['index'])])
-                filenames_test_ambiguous.append(filenames[row['index']])
-        elif row['ambiguous'] == 0:
-            if row['index'] in filenames_train:
-                X_train_without_ambiguous.append(X_train[filenames_train.index(row['index'])])
-                y_train_without_ambiguous.append(y_train[filenames_train.index(row['index'])])
-            else:
-                X_test_without_ambiguous.append(X_test[filenames_test.index(row['index'])])
-                y_test_without_ambiguous.append(y_test[filenames_test.index(row['index'])])
-
-    print(y_train_only_ambiguous)
-    if training == 'ambiguous only':
-        X_train = np.array(X_train_only_ambiguous)
-        y_train = np.array(y_train_only_ambiguous)
-    elif training == 'without ambiguous':
-        X_train = np.array(X_train_without_ambiguous)
-        y_train = np.array(y_train_without_ambiguous)
-    if testing == 'ambiguous only':
-        print(y_train_only_ambiguous)
-        X_test = np.array(X_test_only_ambiguous + X_train_only_ambiguous)
-        y_test = np.array(y_test_only_ambiguous + y_train_only_ambiguous)
-        filenames1 = filenames_test_ambiguous + filenames_train_ambiguous
-    elif testing == 'without ambiguous':
-        X_test = np.array(X_test_without_ambiguous)
-        y_test = np.array(y_test_without_ambiguous)
-    ### TEMP
+    if config.normal_evaluation:
+        X_train, X_test, y_train, y_test, filenames_train, filenames_test = model_selection.train_test_split(X,
+                                                                                                             y_encoded,
+                                                                                                             filenames,
+                                                                                                             test_size=0.33,
+                                                                                                             random_state=42)
+    else:
+        X_train, X_test, y_train, y_test, filenames_train, filenames_test = tools.adjust_dataset(X, y_encoded, filenames, df)
 
     clf = prepare_clf(X_train, y_train)
 
@@ -220,8 +203,8 @@ def main():
         pred_proba_all = clf.predict_proba(X_test)
         pred_proba = np.max(pred_proba_all, axis=1)
 
-    analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames1)
-    #visualization(X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames)
+    #analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
+    visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
 
 
 if __name__ == "__main__":
