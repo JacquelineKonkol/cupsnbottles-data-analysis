@@ -1,5 +1,3 @@
-# TODO Umzug in tools
-
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import cupsnbottles.img_scatter as img_scatter
 import tools.basics as tools
@@ -7,6 +5,8 @@ import tools.basics as tools
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import matplotlib.image as mpimg
 import matplotlib.colors
 from mpl_toolkits.mplot3d import Axes3D
@@ -58,7 +58,7 @@ def plot_confusion_matrix(cm, classes,
 
 
 
-def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, classifier, img_name, dims=2, perplexity=30, learning_rate=200.0):
+def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, fig_title, num_samples, classifier, img_name, dims=2, perplexity=30, learning_rate=200.0):
     """
     nD case: returns data embedded into n dimensions using t_sne
     3D case: simple t-SNE 3D plot with gt labels
@@ -66,7 +66,7 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
              the two and the classification confidence for each prediction
     :returns: embedded data in n-dim
     """
-    if num_samples == 0: num_samples = len(X)
+    if num_samples == 0: num_samples = len(X_test)
     print(num_samples)
     colors = np.array(["black", "grey", "orange", "darkred", "orchid",
                        "lime", "lightgrey", "red", "green", "#bcbd22", "c"])
@@ -76,7 +76,8 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
     diff_colors[pred_colors != gt_colors] = 'red'
     plotcolors = [gt_colors, pred_colors, diff_colors]
 
-    X_embedded = tools.t_sne(X)
+    X_embedded_all = tools.t_sne(X)
+    X_embedded = tools.t_sne(X_test)
 
     if dims == 3:
         # right now visualizes only gt
@@ -107,10 +108,12 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
             #ax.set_yticks([])
             ax.grid()
             if i < 3:
-                ax.scatter(X_embedded[:, 0], X_embedded[:, 1], marker='.', color=plotcolors[i])
+                ax.scatter(X_embedded_all[filenames_test, 0], X_embedded_all[filenames_test, 1], marker='.', color=plotcolors[i])
+                #ax.scatter(X_embedded[:, 0], X_embedded[:, 1], marker='.', color=plotcolors[i]) # here t-sne was performed only on test data
             else:
                 cmap = sns.cubehelix_palette(as_cmap=True)
-                points = ax.scatter(X_embedded[:, 0], X_embedded[:, 1], c=pred_proba, marker='.', cmap=cmap)
+                points = ax.scatter(X_embedded_all[filenames_test, 0], X_embedded_all[filenames_test, 1], c=pred_proba, marker='.', cmap=cmap)
+                #points = ax.scatter(X_embedded[:, 0], X_embedded[:, 1], c=pred_proba, marker='.', cmap=cmap) # here t-sne was performed only on test data
                 fig.colorbar(points)
 
 
@@ -127,13 +130,12 @@ def t_sne_plot(X, y_gt, y_pred, pred_proba, labels_old, fig_title, num_samples, 
         return X_embedded
 
 
-########### TODO
-def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba, classifier):
+def image_conf_scatter(X_all_embedded, imgs, indices, title, pred_proba, classifier):
     """
     :param: X_embedded = should be a 2D embedding of the whole dataset
     :param: df = dataframe containing the images load_properties
     :param: imgs = images to include into the scatterplot
-    :param: indices = of the images to include
+    :param: indices = of the images to include in relation to whole dataset (unshuffled)
     """
     #norm=plt.Normalize(-2,2)
     #cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", ["red","violet","blue"])
@@ -142,19 +144,29 @@ def image_conf_scatter(X_embedded, imgs, indices, title, pred_proba, classifier)
     #plt.colorbar()
     #plt.show()
 
-    #for i, img in enumerate(imgs):
-#        img = np.asarray(img)
-    #    print(img)
-#        col = pred_proba[indices[i]]
-#        img = img_scatter.frameImage(img,col)
+    top = cm.get_cmap('Oranges_r', 128)
+    bottom = cm.get_cmap('Greens', 128)
+
+    newcolors = np.vstack((top(np.linspace(0, 1, 128)),
+                           bottom(np.linspace(0, 1, 128))))
+    newcmp = ListedColormap(newcolors, name='OrangeGreens')
+
+    newcmp = cm.get_cmap('viridis', 12)
+    imgs_framed = []
+
+    for i, img in enumerate(imgs):
+        img = np.asarray(img)
+        col = newcmp(pred_proba[i])
+        imgs_framed.append(img_scatter.frameImage(img,col))
 
     fig = plt.figure()
-    artists = img_scatter.imageScatter(X_embedded[indices, 0],
-                                       X_embedded[indices, 1],imgs,img_scale=(20,20))
+    artists = img_scatter.imageScatter(X_all_embedded[indices, 0],
+                                       X_all_embedded[indices, 1],imgs_framed,img_scale=(25,25))
 
 
-    fig.suptitle(title, fontsize=20)
-    #plt.colorbar()
+    fig.suptitle(title, fontsize=10)
     plt.grid()
+
+    #fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap))
     fig.savefig('plots/' + classifier.replace(' ', '_') + '_imgs_scatter.png')
     plt.show()

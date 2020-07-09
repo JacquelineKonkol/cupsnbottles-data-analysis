@@ -30,6 +30,7 @@ def imageScatter(x,y,imgs,cls=None,probs=None,labels=None,ax=None,img_scale=(50,
         else:
             #img = imresize(imgs[ind],img_scale)
             img = np.array(PIL.Image.fromarray(imgs[ind][...,:3]).resize(img_scale))
+
         if cls is not None:
             img = frameImage(img,clsCols[classInd[ind]],frame_width,3,True)
         if probs is not None:
@@ -60,19 +61,21 @@ def imageScatter(x,y,imgs,cls=None,probs=None,labels=None,ax=None,img_scale=(50,
 
 def frameImage(img,col,bw=2,side=15,image_scale_up=False):
     '''draws a frame into an image, bw = borderwidth, col=color, side is a bitmask were the frame should appear'''
-    if not isinstance(col,np.ndarray):
-        if isinstance(col,float) and col < 1:
-            col = col * 255
-        col = np.array([col,col,col])
+    #if not isinstance(col,np.ndarray):
+    #    if isinstance(col,float) and col < 1:
+    #        col = col * 255
+    #    col = np.array([col,col,col])
 
     nimg = img
     if image_scale_up:
         nimg = np.zeros((img.shape[0]+bw*2,img.shape[1]+bw*2,img.shape[2]),np.uint8)
         nimg[bw:-bw,bw:-bw,:] = img[:,:,:]
 
+    img = np.array(PIL.Image.fromarray(img[..., :3]).resize((25, 25)))
+
     for i,c in enumerate(col):
-        if side & 1: nimg[0:bw,:,i] = c
-        if side & 2: nimg[:,0:bw,i] = c
-        if side & 4: nimg[-bw:,:,i] = c
-        if side & 8: nimg[:,-bw:,i] = c
+        if side & 1: nimg[0:bw,:,i] = c*255
+        if side & 2: nimg[:,0:bw,i] = c*255
+        if side & 4: nimg[-bw:,:,i] = c*255
+        if side & 8: nimg[:,-bw:,i] = c*255
     return nimg

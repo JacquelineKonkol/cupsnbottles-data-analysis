@@ -76,7 +76,7 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
     ### t-sne scatterplot ###
     if (pred_proba is not None):
         title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
-        X_embedded = plotting.t_sne_plot(X_test, y_test, y_pred, pred_proba, label_names, title, config.num_samples,
+        X_embedded = plotting.t_sne_plot(X, X_test, y_test, y_pred, filenames_test, pred_proba, label_names, title, config.num_samples,
                                          classifier,
                                          "cupsnbottles", dims)
 
@@ -89,7 +89,7 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             pass
             imgs = tools.load_images(config.path_dataset, filenames_test[inds_misclassification], filenames)
             title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], title_imgs, pred_proba, classifier)
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], title_imgs, pred_proba[inds_misclassification], classifier)
 
         # image scatterplot ambiguous in test with frame denoting classification success
         if config.ambiguous_test_part > 0:
@@ -97,7 +97,8 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             indices_to_plot = np.intersect1d(indicesAmbiguous, filenames_test) # denote indices before shuffeling
             imgs = tools.load_images(config.path_dataset, indices_to_plot, filenames)
             title_imgs = str(len(imgs)) + ' ambiguous samples as classified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba, classifier)
+            _, inds_in_test, _ = np.intersect1d(filenames_test, indices_to_plot, return_indices=True)
+            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba[inds_in_test], classifier)
 
         # image scatterplot overlap in test with frame denoting classification success
         if config.overlap_test_part > 0:
@@ -105,7 +106,8 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             indices_to_plot = np.intersect1d(indicesOverlap, filenames_test) # denote indices before shuffeling
             imgs = tools.load_images(config.path_dataset, indices_to_plot, filenames)
             title_imgs = str(len(imgs)) + ' overlap samples as classified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba, classifier)
+            _, inds_in_test, _ = np.intersect1d(filenames_test, indices_to_plot, return_indices=True)
+            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba[inds_in_test], classifier)
 
         # image scatterplot low confidence (100 images by default)
         if pred_proba is not None:

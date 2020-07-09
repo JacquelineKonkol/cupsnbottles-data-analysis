@@ -11,6 +11,7 @@ config = config()
 
 # TODO num_samples noch einbauen, oder entfernen?
 def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
+    # in dataset01/ the properties.csv does not suffice for all the function later used
     if path == 'dataset01/':
         X = open_pkl(path, 'features.pkl')
         label_names = ['Can01', 'Can02', 'Can03', 'Coke001', 'Coke002Cup', 'WaterBottle']
@@ -43,6 +44,8 @@ def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
              y_encoded[y == label] = i
          y_encoded = y_encoded.astype(int)
 
+    # using the norm that the image-files are named by their index and the properties.csv
+    # provides information on ambiguity and overlaps
     else:
         X = open_pkl(path, 'features.pkl')
         properties = csv_to_df(path, 'properties.csv')
@@ -129,7 +132,6 @@ def adjust_dataset(X, y_encoded, filenames, df):
     # split each category into train and test according to requested proportion
     X_train, y_train, filenames_train = [], [], []
     X_test, y_test, filenames_test = [], [], []
-
     categories = ['vanilla', 'ambiguous', 'overlap', 'both']
     lengths = [len(indicesVanilla), len(indicesAmbiguous), len(indicesOverlap), len(indicesBoth)]
     X_sets = [X[maskVanilla], X[maskAmbiguous], X[maskOverlap], X[maskBoth]]
