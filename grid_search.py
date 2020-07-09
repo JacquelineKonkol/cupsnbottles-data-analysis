@@ -1,4 +1,6 @@
 # TODO generalize so different datasets can be used
+import itertools
+
 from sklearn import model_selection
 import tools.basics as tools
 print(__doc__)
@@ -8,13 +10,13 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from joblib import dump, load
 import os
-
+from glvq import *
 
 ################################################################################
 ####################################specify#####################################
 config = settings.config()
 
-classifier = "glvq"
+classifier = None
 dims = None # number of dimensions to reduce to before training
 dims_method = None
 #dims_method = 'pca'
@@ -45,10 +47,23 @@ def save_grid_search_results(clf, classifier_name):
 
 def run_glvq(X, y):
     # Todo gridsearch
-    clf_index = config.classifier_names.index("glvq")
-    clf = classifiers[clf_index]
-    X_train, X_test, y_train, y_test= model_selection.train_test_split(X, y, test_size=0.33, random_state=42)
-    clf.fit(X_train, y_train)
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.33, random_state=42)
+
+    grid_search_results = []
+    clf_index = config.classifier_names.index(classifier)
+    for param_set in itertools.product(*config.parameters_grid_search[clf_index].values(), repeat=1):
+
+        clf = glvq(max_prototypes_per_class=int(param_set[0]),
+                   learning_rate=int(param_set[1]),
+                   strech_factor=int(param_set[2]))
+
+
+        clf.fit(X_train, y_train)
+        score = clf.score(X_test, y_test)
+        grid_search_results.append((score, param_set, clf))
+    grid_search_results_sorted= sorted(grid_search_results, key=lambda tup: tup[1],
+           reverse=True)
+
 
     result_path_params = os.path.join(config.path_best_params, config.path_dataset)
     if not os.path.isdir(result_path_params):
@@ -58,14 +73,19 @@ def run_glvq(X, y):
     if not os.path.isdir(result_path_clf):
         os.mkdir(result_path_clf)
 
-    dump(clf, result_path_clf + "glvq" + '.joblib')
-    dump(config.parameters_grid_search[clf_index], result_path_params + "glvq" + '_params.joblib')
+    dump(grid_search_results_sorted[0][2], result_path_clf + "glvq" + '.joblib')
+    dump(grid_search_results_sorted[0][0], result_path_params + "glvq" + '_params.joblib')
+
+    best_clf = grid_search_results_sorted[0][2]
+
+    print("glvq" + ' best params: ',
+          grid_search_results_sorted[0][1])
 
     print("glvq" + ' with train score: ',
-          clf.score(X_train, y_train))
+          best_clf.score(X_train, y_train))
 
     print("glvq" + ' with test score: ',
-          clf.score(X_test, y_test))
+          best_clf.score(X_test, y_test))
 
 
 def grid_search(X, y, label_names, classifier=None):
@@ -126,7 +146,7 @@ def dim_red(X, dims=2, init='pca'):
 
 def main():
     # load the data
-    X, y_encoded, y, label_names, df = tools.load_gt_data()
+    X, y_encoded, y, label_names, df, filenames = tools.load_gt_data()
 
     if dims is not None:
         if dims_method:

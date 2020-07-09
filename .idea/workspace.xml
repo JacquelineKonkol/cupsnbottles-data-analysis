@@ -3,8 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="be3b2025-f793-4fb4-97dc-f9a17073915f" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dataset02/properties.csv" beforeDir="false" afterPath="$PROJECT_DIR$/dataset02/properties.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/config.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grid_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/grid_search.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,14 +16,15 @@
     <session id="1266004863">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="6" />
+          <entry key="project.closed" value="7" />
           <entry key="project.open.time.0" value="1" />
           <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.17" value="1" />
           <entry key="project.open.time.6" value="2" />
           <entry key="project.open.time.7" value="2" />
           <entry key="project.open.time.8" value="2" />
-          <entry key="project.opened" value="9" />
+          <entry key="project.open.time.9" value="1" />
+          <entry key="project.opened" value="10" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -32,7 +33,7 @@
           <entry key="gitignore" value="1" />
           <entry key="ini" value="2" />
           <entry key="png" value="5" />
-          <entry key="py" value="56" />
+          <entry key="py" value="62" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -40,7 +41,7 @@
           <entry key="Image" value="5" />
           <entry key="Ini" value="1" />
           <entry key="PLAIN_TEXT" value="4" />
-          <entry key="Python" value="56" />
+          <entry key="Python" value="62" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
@@ -48,14 +49,15 @@
           <entry key="csv" value="1" />
           <entry key="dummy" value="15" />
           <entry key="gitignore" value="6" />
-          <entry key="ini" value="103" />
-          <entry key="py" value="6646" />
+          <entry key="ini" value="120" />
+          <entry key="py" value="6833" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
+          <entry key="Ini" value="17" />
           <entry key="PLAIN_TEXT" value="125" />
-          <entry key="Python" value="6646" />
+          <entry key="Python" value="6833" />
         </counts>
       </usages-collector>
     </session>
@@ -63,68 +65,56 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/sklearn/base.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="833">
-              <caret line="59" selection-start-line="59" selection-end-line="59" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/evaluation.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="172">
-              <caret line="123" lean-forward="true" selection-start-line="123" selection-end-line="123" />
+              <caret line="123" selection-start-line="123" selection-end-line="123" />
               <folding>
                 <element signature="e#189#198#0" expanded="true" />
-                <marker date="1593954499759" expanded="true" signature="3807:4088" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tools/settings.py">
+        <entry file="file://$PROJECT_DIR$/glvq.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="612">
-              <caret line="49" column="15" selection-start-line="49" selection-start-column="15" selection-end-line="49" selection-end-column="15" />
+            <state relative-caret-position="5499">
+              <caret line="355" column="37" selection-start-line="355" selection-start-column="12" selection-end-line="355" selection-end-column="37" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../3. Semester/Assoziierung von Occupancy Grid Maps/miele_mapping/stitching_eval/eval_stich_all_images_gridsearch.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1896">
+              <caret line="149" column="33" selection-start-line="149" selection-start-column="33" selection-end-line="150" selection-end-column="79" />
+              <folding>
+                <element signature="e#81#97#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tools/basics.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="321">
+              <caret line="63" column="110" selection-start-line="63" selection-start-column="101" selection-end-line="63" selection-end-column="110" />
+              <folding>
+                <element signature="e#0#58#0" expanded="true" />
+                <marker date="1593955798293" expanded="true" signature="232:234" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/config.ini">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="141">
-              <caret line="13" column="17" selection-start-line="13" selection-end-line="13" selection-end-column="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/pandas/core/internals/construction.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3094">
-              <caret line="227" selection-start-line="227" selection-end-line="227" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dataset02/properties.csv">
-          <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret column="36" selection-start-column="29" selection-end-column="36" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/sklearn/utils/validation.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="9061">
-              <caret line="549" selection-start-line="549" selection-end-line="549" />
+            <state relative-caret-position="17">
+              <caret line="1" column="24" selection-start-line="1" selection-start-column="24" selection-end-line="1" selection-end-column="24" />
             </state>
           </provider>
         </entry>
@@ -141,7 +131,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/pandas/core/frame.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="356">
+            <state relative-caret-position="5372">
               <caret line="434" selection-start-line="434" selection-end-line="434" />
             </state>
           </provider>
@@ -152,6 +142,28 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="935">
               <caret line="78" selection-start-line="78" selection-end-line="78" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/grid_search.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="289">
+              <caret line="29" column="51" lean-forward="true" selection-start-line="29" selection-start-column="51" selection-end-line="29" selection-end-column="51" />
+              <folding>
+                <element signature="e#52#68#0" expanded="true" />
+                <marker date="1594275768012" expanded="true" signature="1777:3329" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tools/settings.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-186">
+              <caret line="12" selection-start-line="12" selection-end-line="12" selection-end-column="18" />
             </state>
           </provider>
         </entry>
@@ -174,6 +186,7 @@
       <find>num_samples</find>
       <find>print</find>
       <find>glvq</find>
+      <find>sort</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -186,13 +199,13 @@
         <option value="$PROJECT_DIR$/t-SNE_iteration.py" />
         <option value="$PROJECT_DIR$/glvq.py" />
         <option value="$PROJECT_DIR$/tools/config_loader.py" />
-        <option value="$PROJECT_DIR$/grid_search.py" />
         <option value="$PROJECT_DIR$/tools/settings.py" />
         <option value="$PROJECT_DIR$/plotting.py" />
-        <option value="$PROJECT_DIR$/config.ini" />
         <option value="$PROJECT_DIR$/tools/basics.py" />
         <option value="$PROJECT_DIR$/dataset02/properties.csv" />
         <option value="$PROJECT_DIR$/evaluation.py" />
+        <option value="$PROJECT_DIR$/grid_search.py" />
+        <option value="$PROJECT_DIR$/config.ini" />
       </list>
     </option>
   </component>
@@ -218,6 +231,12 @@
               <item name="cupsnbottles-data-analysis" type="b2602c69:ProjectViewProjectNode" />
               <item name="cupsnbottles-data-analysis" type="462c0819:PsiDirectoryNode" />
               <item name="classifiers_best_params" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="cupsnbottles-data-analysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="cupsnbottles-data-analysis" type="462c0819:PsiDirectoryNode" />
+              <item name="classifiers_best_params" type="462c0819:PsiDirectoryNode" />
+              <item name="dataset02" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="cupsnbottles-data-analysis" type="b2602c69:ProjectViewProjectNode" />
@@ -256,7 +275,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.evaluation">
+  <component name="RunManager" selected="Python.grid_search">
     <configuration name="basics" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="cupsnbottles-data-analysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -371,8 +390,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.evaluation" />
         <item itemvalue="Python.grid_search" />
+        <item itemvalue="Python.evaluation" />
         <item itemvalue="Python.glvq" />
         <item itemvalue="Python.t-SNE_iteration" />
         <item itemvalue="Python.basics" />
@@ -444,6 +463,11 @@
           <url>file://$PROJECT_DIR$/../../../3. Semester/Assoziierung von Occupancy Grid Maps/miele_mapping/stitching_eval/eval_stich_all_images_gridsearch.py</url>
           <line>2</line>
           <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/grid_search.py</url>
+          <line>67</line>
+          <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -586,16 +610,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../../3. Semester/Assoziierung von Occupancy Grid Maps/miele_mapping/stitching_eval/eval_stich_all_images_gridsearch.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="531">
-          <caret line="287" column="20" selection-start-line="287" selection-start-column="20" selection-end-line="287" selection-end-column="20" />
-          <folding>
-            <element signature="e#81#97#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/joblib/numpy_pickle.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
@@ -610,39 +624,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/glvq.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="293">
-          <caret line="355" column="37" selection-start-line="355" selection-start-column="12" selection-end-line="355" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/sklearn/metrics/scorer.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="137">
           <caret line="341" selection-start-line="341" selection-end-line="341" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tools/basics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1224">
-          <caret line="79" selection-start-line="79" selection-end-line="79" />
-          <folding>
-            <element signature="e#0#58#0" expanded="true" />
-            <marker date="1593674866102" expanded="true" signature="232:234" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/grid_search.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="22" column="22" selection-start-line="22" selection-start-column="22" selection-end-line="22" selection-end-column="22" />
-          <folding>
-            <element signature="e#52#87#0" expanded="true" />
-            <marker date="1593674412125" expanded="true" signature="1743:2643" ph="..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -681,6 +666,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/pandas/core/frame.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5372">
+          <caret line="434" selection-start-line="434" selection-end-line="434" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/plotting.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="935">
@@ -688,35 +680,66 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/Anaconda3/envs/ki/Lib/site-packages/pandas/core/frame.py">
+    <entry file="file://$PROJECT_DIR$/evaluation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="356">
-          <caret line="434" selection-start-line="434" selection-end-line="434" />
+        <state relative-caret-position="172">
+          <caret line="123" selection-start-line="123" selection-end-line="123" />
+          <folding>
+            <element signature="e#189#198#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/glvq.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5499">
+          <caret line="355" column="37" selection-start-line="355" selection-start-column="12" selection-end-line="355" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tools/basics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="321">
+          <caret line="63" column="110" selection-start-line="63" selection-start-column="101" selection-end-line="63" selection-end-column="110" />
+          <folding>
+            <element signature="e#0#58#0" expanded="true" />
+            <marker date="1593955798293" expanded="true" signature="232:234" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../3. Semester/Assoziierung von Occupancy Grid Maps/miele_mapping/stitching_eval/eval_stich_all_images_gridsearch.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1896">
+          <caret line="149" column="33" selection-start-line="149" selection-start-column="33" selection-end-line="150" selection-end-column="79" />
+          <folding>
+            <element signature="e#81#97#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tools/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="49" column="15" selection-start-line="49" selection-start-column="15" selection-end-line="49" selection-end-column="15" />
+        <state relative-caret-position="-186">
+          <caret line="12" selection-start-line="12" selection-end-line="12" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/grid_search.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="29" column="51" lean-forward="true" selection-start-line="29" selection-start-column="51" selection-end-line="29" selection-end-column="51" />
+          <folding>
+            <element signature="e#52#68#0" expanded="true" />
+            <marker date="1594275768012" expanded="true" signature="1777:3329" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/config.ini">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="141">
-          <caret line="13" column="17" selection-start-line="13" selection-end-line="13" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/evaluation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="172">
-          <caret line="123" lean-forward="true" selection-start-line="123" selection-end-line="123" />
-          <folding>
-            <element signature="e#189#198#0" expanded="true" />
-            <marker date="1593954499759" expanded="true" signature="3807:4088" ph="..." />
-          </folding>
+        <state relative-caret-position="17">
+          <caret line="1" column="24" selection-start-line="1" selection-start-column="24" selection-end-line="1" selection-end-column="24" />
         </state>
       </provider>
     </entry>
