@@ -1,4 +1,4 @@
-index,object_class,occlusion,ambiguous,overlaps
+index,object_class,occlusion,ambiguous,overlap
 0,CokeZero,0.4,0,1
 1,Coke,0.4,0,0
 2,WaterBottle,0.4,0,0

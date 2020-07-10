@@ -144,22 +144,40 @@ def adjust_dataset(X, y_encoded, filenames, df):
     for i in range(2):
         # add every category according to requested proportion
         for category, _ in enumerate(X_sets):
-            # add training part of category to training variables
-            if i == 0:
+            # edge case where the data can't be split in equal halves
+            if train_parts[category] and test_parts[category] and len(X_sets[category]) % 2 == 1 and i == 0:
                 print('Using ' + str(int(round(train_parts[category] * lengths[category]))) + ' samples from ' + categories[category] + " in training.")
                 X_train.extend(X_sets[category][:int(round(train_parts[category] * lengths[category]))])
                 y_train.extend(y_sets[category][:int(round(train_parts[category] * lengths[category]))])
                 filenames_train.extend(filenames_sets[category][:int(round(train_parts[category] * lengths[category]))])
-            # add testing part of category to testing variables
+                print('Using ' + str(int(round(test_parts[category] * lengths[category]))-1) + ' samples from ' +categories[category] + " in testing.")
+                X_test.extend(X_sets[category][-int(round(test_parts[category] * lengths[category]))-1:])
+                y_test.extend(y_sets[category][-int(round(test_parts[category] * lengths[category]))-1:])
+                filenames_test.extend(filenames_sets[category][-int(round(test_parts[category] * lengths[category]))-1:])
             else:
-                print('Using ' + str(int(round(test_parts[category] * lengths[category]))) + ' samples from ' + categories[category] + " in testing.")
-                X_test.extend(X_sets[category][-int(round(test_parts[category] * lengths[category])):])
-                y_test.extend(y_sets[category][-int(round(test_parts[category] * lengths[category])):])
-                filenames_test.extend(filenames_sets[category][-int(round(test_parts[category] * lengths[category])):])
+                # add training part of category to training variables
+                if i == 0:
+                    print('Using ' + str(int(round(train_parts[category] * lengths[category]))) + ' samples from ' + categories[category] + " in training.")
+                    if train_parts[category] != 0:
+                        X_train.extend(X_sets[category][:int(round(train_parts[category] * lengths[category]))])
+                        y_train.extend(y_sets[category][:int(round(train_parts[category] * lengths[category]))])
+                        filenames_train.extend(filenames_sets[category][:int(round(train_parts[category] * lengths[category]))])
+                # add testing part of category to testing variables
+                else:
+                    print('Using ' + str(int(round(test_parts[category] * lengths[category]))) + ' samples from ' + categories[category] + " in testing.")
+                    if test_parts[category] != 0:
+                        X_test.extend(X_sets[category][-int(round(test_parts[category] * lengths[category])):])
+                        y_test.extend(y_sets[category][-int(round(test_parts[category] * lengths[category])):])
+                        filenames_test.extend(filenames_sets[category][-int(round(test_parts[category] * lengths[category])):])
     print('Total used samples: ', len(y_train)+len(y_test))
     print('Total training samples: ', len(y_train))
     print('Total testing samples: ', len(y_test))
     print('>> DONE Preparing Dataset')
+
+    a = np.arange(20)
+    print(a[:8])
+    print(a[-8:])
+    print(a[-0:])
 
     # shuffle again
     shuffler_train = np.random.permutation(len(X_train))
