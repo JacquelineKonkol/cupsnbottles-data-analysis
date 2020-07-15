@@ -125,6 +125,7 @@ def adjust_dataset(X, y_encoded, filenames, df):
     # shuffle dataset
     print('>> Preparing Dataset')
     print('Total available samples: ', len(X))
+    np.random.seed(55)
     shuffler = np.random.permutation(len(X))
     X, y_encoded, filenames = X[shuffler], y_encoded[shuffler], filenames[shuffler]
     maskVanilla, maskAmbiguous, maskOverlap, maskBoth = maskVanilla[shuffler], maskAmbiguous[shuffler], maskOverlap[shuffler], maskBoth[shuffler]
@@ -180,7 +181,9 @@ def adjust_dataset(X, y_encoded, filenames, df):
     print(a[-0:])
 
     # shuffle again
+    np.random.seed(44)
     shuffler_train = np.random.permutation(len(X_train))
+    np.random.seed(33)
     shuffler_test = np.random.permutation(len(X_test))
     X_train, y_train, filenames_train = np.array(X_train)[shuffler_train], np.array(y_train)[shuffler_train], np.array(filenames_train)[shuffler_train]
     X_test, y_test, filenames_test = np.array(X_test)[shuffler_test], np.array(y_test)[shuffler_test], np.array(filenames_test)[shuffler_test]

@@ -130,7 +130,7 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
         return X_embedded
 
 
-def image_conf_scatter(X_all_embedded, imgs, indices, title, pred_proba, classifier):
+def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pred_proba, classifier):
     """
     :param: X_embedded = should be a 2D embedding of the whole dataset
     :param: df = dataframe containing the images load_properties
@@ -143,6 +143,8 @@ def image_conf_scatter(X_all_embedded, imgs, indices, title, pred_proba, classif
     #plt.scatter(x,y,c=c, cmap=cmap, norm=norm)
     #plt.colorbar()
     #plt.show()
+
+    _, inds_relativeToAll, _ = np.intersect1d(filenames, files_to_plot, return_indices=True)
 
     top = cm.get_cmap('Oranges_r', 128)
     bottom = cm.get_cmap('Greens', 128)
@@ -160,8 +162,8 @@ def image_conf_scatter(X_all_embedded, imgs, indices, title, pred_proba, classif
         imgs_framed.append(img_scatter.frameImage(img,col))
 
     fig = plt.figure()
-    artists = img_scatter.imageScatter(X_all_embedded[indices, 0],
-                                       X_all_embedded[indices, 1],imgs_framed,img_scale=(25,25))
+    artists = img_scatter.imageScatter(X_all_embedded[inds_relativeToAll, 0],
+                                       X_all_embedded[inds_relativeToAll, 1],imgs_framed,img_scale=(25,25))
 
 
     fig.suptitle(title, fontsize=10)

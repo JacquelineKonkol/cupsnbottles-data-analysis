@@ -39,8 +39,8 @@ def prepare_clf(X_train, y_train):
 
 def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test):
     """
-    Produces visualization of - confusion matrices
-                              - scatterplot collage with classification results
+    Produces visualization of - confusion matrix for train and test set each (+ normalized version)
+                              - scatterplot collage with classification results and useful information
                               - image scatterplots of categories of interest
     :param X_test
     :param X_train
@@ -59,7 +59,7 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
     :return:
     """
 
-
+    print('>> Visualization')
     ### confusion matrices ###
     if (len(np.unique(y_train)) == len(label_names)):
         cm_train = metrics.confusion_matrix(y_train, y_pred_train)
@@ -89,25 +89,25 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             pass
             imgs = tools.load_images(config.path_dataset, filenames_test[inds_misclassification], filenames)
             title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], title_imgs, pred_proba[inds_misclassification], classifier)
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], filenames, title_imgs, pred_proba[inds_misclassification], classifier)
 
         # image scatterplot ambiguous in test with frame denoting classification success
         if config.ambiguous_test_part > 0:
             indicesAmbiguous = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 0)]["index"])
-            indices_to_plot = np.intersect1d(indicesAmbiguous, filenames_test) # denote indices before shuffeling
-            imgs = tools.load_images(config.path_dataset, indices_to_plot, filenames)
+            files_to_plot = np.intersect1d(indicesAmbiguous, filenames_test)
+            imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
             title_imgs = str(len(imgs)) + ' ambiguous samples as classified by ' + classifier
-            _, inds_in_test, _ = np.intersect1d(filenames_test, indices_to_plot, return_indices=True)
-            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba[inds_in_test], classifier)
+            _, inds_in_test, _ = np.intersect1d(filenames_test, files_to_plot, return_indices=True)
+            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], classifier)
 
         # image scatterplot overlap in test with frame denoting classification success
         if config.overlap_test_part > 0:
             indicesOverlap = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 1)]["index"])
-            indices_to_plot = np.intersect1d(indicesOverlap, filenames_test) # denote indices before shuffeling
-            imgs = tools.load_images(config.path_dataset, indices_to_plot, filenames)
+            files_to_plot = np.intersect1d(indicesOverlap, filenames_test)
+            imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
             title_imgs = str(len(imgs)) + ' overlap samples as classified by ' + classifier
-            _, inds_in_test, _ = np.intersect1d(filenames_test, indices_to_plot, return_indices=True)
-            plotting.image_conf_scatter(X_all_embedded, imgs, indices_to_plot, title_imgs, pred_proba[inds_in_test], classifier)
+            _, inds_in_test, _ = np.intersect1d(filenames_test, files_to_plot, return_indices=True)
+            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], classifier)
 
         # image scatterplot low confidence (100 images by default)
         if pred_proba is not None:
@@ -117,7 +117,8 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             pred_proba, filenames_test = (list(t) for t in zip(*sorted(zip(pred_proba, filenames_test))))
             imgs = tools.load_images(config.path_dataset, np.arange(default_nb), filenames_test)
             title_imgs = str(default_nb) + ' lowest confidence samples as classified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[:default_nb], title_imgs, pred_proba[:default_nb], classifier)
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[:default_nb], filenames, title_imgs, pred_proba[:default_nb], classifier)
+        print('>> DONE Visualization')
 
 
 def create_filter_maske(y_test, y_pred, pred_proba, mode="all_test_samples", confidence_threshold = 0.7):
@@ -144,6 +145,7 @@ def calculate_cluster_mean(X_2dim, y, label_names):
 
 
 def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, indx_test):
+    print('>> Analysis')
     float_formatter = "{:.2f}".format
     np.set_printoptions(formatter={'float_kind': float_formatter})
 
@@ -176,6 +178,7 @@ def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_p
         os.mkdir("evaluation")
     df.to_csv("evaluation/" + config.path_dataset.replace('/', '') + "_analysis_" + classifier.replace(' ', '_') + ".csv", mode='w',
                      sep=";", index=False)
+    print('>> DONE Analysis')
 
 
 def main():
