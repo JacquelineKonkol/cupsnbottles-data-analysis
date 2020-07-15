@@ -68,6 +68,21 @@ def open_pkl(path, file):
         f = pkl.load(f)
     return f
 
+def read_properties():
+    path = config.path_dataset
+    num_samples = config.num_samples
+
+    if os.path.isfile(path + 'properties.csv'):
+        properties = csv_to_df(path, 'properties.csv')
+        if "ambiguous" in properties and "overlap" in properties:
+            ambiguous = np.array(properties.ambiguous)
+            overlap = np.array(properties.overlap)
+
+            if num_samples == 0:
+                num_samples = len(overlap)
+            return ambiguous[:num_samples], overlap[:num_samples]
+
+    return [], []
 
 def t_sne(X, dims=2, perplexity=30, learning_rate=200.0, n_iter=1000):
     """

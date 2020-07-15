@@ -29,10 +29,10 @@ def prepare_clf(X_train, y_train):
         clf = load(config.path_trained_classifiers + config.path_dataset + classifier.replace(' ', '_') + ".joblib")
     else:
         # train anew with best model parameters
-        loaded_params = load(config.path_best_params + config.path_dataset + classifier.replace(' ', '_') + "_params.joblib")
+        #loaded_params = load(config.path_best_params + config.path_dataset + classifier.replace(' ', '_') + "_params.joblib")
         clf = classifiers[config.classifier_names.index(classifier)]
-        if classifier != "glvq":
-            clf.set_params(**loaded_params)
+        #if classifier != "glvq":
+            #clf.set_params(**loaded_params)
         clf.fit(X_train, y_train)
     return clf
 
@@ -157,12 +157,22 @@ def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_p
     predict_labelnames = [label_names[i] for i in y_pred[filter_mask].astype(int)]
     IDs = [indx_test[i] for i, value in enumerate(filter_mask) if value]
 
+    ambiguous, overlaps = tools.read_properties()
+
     dataFalsePredict = {'IDs': IDs,
                         'True Label':y_test[filter_mask],
                         'True Labelname': true_labelnames,
                         'Predict Label':y_pred[filter_mask].astype(int),
                         'Predict Labelname': predict_labelnames
                         }
+
+    if (len(ambiguous) != 0):
+        ambiguous = ambiguous[IDs]
+        dataFalsePredict['ambiguous'] = ambiguous
+
+    if (len(overlaps) != 0):
+        overlaps = overlaps[IDs]
+        dataFalsePredict['overlap'] = overlaps
 
     if pred_proba is not None:
         dataFalsePredict['Predict Prob.'] = pred_proba[filter_mask]
@@ -183,6 +193,7 @@ def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_p
 
 def main():
     X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
+
     if config.normal_evaluation:
         X_train, X_test, y_train, y_test, filenames_train, filenames_test = model_selection.train_test_split(X,
                                                                                                              y_encoded,
@@ -206,8 +217,8 @@ def main():
         pred_proba_all = clf.predict_proba(X_test)
         pred_proba = np.max(pred_proba_all, axis=1)
 
-    #analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
-    visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
+    analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
+    #visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
 
 
 if __name__ == "__main__":
