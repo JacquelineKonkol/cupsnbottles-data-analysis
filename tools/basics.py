@@ -135,6 +135,7 @@ def adjust_dataset(X, y_encoded, filenames, df):
     X_test, y_test, filenames_test = [], [], []
     categories = ['vanilla', 'ambiguous', 'overlap', 'both']
     lengths = [len(indicesVanilla), len(indicesAmbiguous), len(indicesOverlap), len(indicesBoth)]
+    print(lengths)
     X_sets = [X[maskVanilla], X[maskAmbiguous], X[maskOverlap], X[maskBoth]]
     y_sets = [y_encoded[maskVanilla], y_encoded[maskAmbiguous], y_encoded[maskOverlap], y_encoded[maskBoth]]
     filenames_sets = [filenames[maskVanilla], filenames[maskAmbiguous], filenames[maskOverlap], filenames[maskBoth]]
@@ -146,14 +147,14 @@ def adjust_dataset(X, y_encoded, filenames, df):
         # add every category according to requested proportion
         for category, _ in enumerate(X_sets):
             # edge case where the data can't be split in equal halves
-            if train_parts[category] and test_parts[category] and len(X_sets[category]) % 2 == 1 and i == 0:
+            if train_parts[category] is 0.5 and test_parts[category] is 0.5 and len(X_sets[category]) % 2 == 1 and i == 0:
                 print('Using ' + str(int(round(train_parts[category] * lengths[category]))) + ' samples from ' + categories[category] + " in training.")
                 X_train.extend(X_sets[category][:int(round(train_parts[category] * lengths[category]))])
                 y_train.extend(y_sets[category][:int(round(train_parts[category] * lengths[category]))])
                 filenames_train.extend(filenames_sets[category][:int(round(train_parts[category] * lengths[category]))])
-                print('Using ' + str(int(round(test_parts[category] * lengths[category]))-1) + ' samples from ' +categories[category] + " in testing.")
-                X_test.extend(X_sets[category][-int(round(test_parts[category] * lengths[category]))-1:])
-                y_test.extend(y_sets[category][-int(round(test_parts[category] * lengths[category]))-1:])
+                print('Using ' + str(int(round(test_parts[category] * lengths[category]))) + ' samples from ' +categories[category] + " in testing.")
+                X_test.extend(X_sets[category][-int(round(test_parts[category] * lengths[category])):])
+                y_test.extend(y_sets[category][-int(round(test_parts[category] * lengths[category])):])
                 filenames_test.extend(filenames_sets[category][-int(round(test_parts[category] * lengths[category]))-1:])
             else:
                 # add training part of category to training variables
