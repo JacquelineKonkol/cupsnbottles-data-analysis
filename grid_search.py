@@ -74,7 +74,7 @@ def run_glvq(X, y):
         os.mkdir(result_path_clf)
 
     dump(grid_search_results_sorted[0][2], result_path_clf + "glvq" + '.joblib')
-    dump(grid_search_results_sorted[0][0], result_path_params + "glvq" + '_params.joblib')
+    dump(grid_search_results_sorted[0][1], result_path_params + "glvq" + '_params.joblib')
 
     best_clf = grid_search_results_sorted[0][2]
 

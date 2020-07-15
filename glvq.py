@@ -36,7 +36,7 @@ class glvq():
 
     def __init__(self,max_prototypes_per_class=5,learning_rate=2,strech_factor=1,placement_strategy=None, move_only_winner=False, set_winner=False, inhibit_wminus=False, inhibit_wminus_params={'std_dev': 1, 'min_update': 0.05, 'inhibition_step': 1}, buffered=False, buffer_size=50,buffer_proba=0.5, weighted_rand_winner_selection=False, weighted_rand_looser_selection=False, knn=None):
         """Constructor takes some additional arguments like max_prototypes_per_class, learning_rate. Additionally a
-        placement strategy can passed as a callback. The function takes one sample x and corresponding label y and
+        placement strategy can passed as a callbackset_params. The function takes one sample x and corresponding label y and
         returns True if a new prototype should be placed otherwise false. Then the prototype is moved (see fit sample)."""
         self.max_prototypes_per_class = sys.maxsize if max_prototypes_per_class is None else max_prototypes_per_class
         self.learning_rate = learning_rate

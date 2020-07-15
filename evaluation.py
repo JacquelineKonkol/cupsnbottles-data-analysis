@@ -12,12 +12,13 @@ from joblib import dump, load
 from sklearn import metrics
 import pandas as pd
 import tools.settings as settings
+from glvq import *
 ################################################################################
 ####################################specify#####################################
 
 config = settings.config()
 classifiers = settings.get_classifiers()
-classifier = "nearest_neighbors" # look up in classifier_names list
+classifier = "Nearest_Neighbors".lower() # look up in classifier_names list
 imgs_falsely_classified = False # only misclassified images are used in                         #
 dims = 2
 
@@ -29,11 +30,16 @@ def prepare_clf(X_train, y_train):
         clf = load(config.path_trained_classifiers + config.path_dataset + classifier.replace(' ', '_') + ".joblib")
     else:
         # train anew with best model parameters
-        #loaded_params = load(config.path_best_params + config.path_dataset + classifier.replace(' ', '_') + "_params.joblib")
-        clf = classifiers[config.classifier_names.index(classifier)]
-        #if classifier != "glvq":
-            #clf.set_params(**loaded_params)
-        clf.fit(X_train, y_train)
+        loaded_params = load(config.path_best_params + config.path_dataset + classifier.replace(' ', '_') + "_params.joblib")
+        if classifier != "glvq":
+            clf = classifiers[config.classifier_names.index(classifier)]
+            clf.set_params(**loaded_params)
+            clf.fit(X_train, y_train)
+        else:
+            clf = glvq(max_prototypes_per_class=loaded_params[0],
+                                      learning_rate=loaded_params[1],
+                                      strech_factor=loaded_params[2])
+            clf.fit(X_train, y_train)
     return clf
 
 
@@ -180,8 +186,9 @@ def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_p
     for i in range(0, len(label_names)):
         key ='Dist to Cluster ' + label_names[i]
         dataFalsePredict[key] = ["{:.3f}".format(float(np.linalg.norm(point-cluster_means[i]['mean']))).replace(".", ",") for point in X_embedded[IDs]]
-        key = 'Predict Prob. ' + label_names[clf.classes_[i]]
-        dataFalsePredict[key] = pred_proba_all[filter_mask][:, clf.classes_[i]]
+        if classifier != "glvq":
+            key = 'Predict Prob. ' + label_names[clf.classes_[i]]
+            dataFalsePredict[key] = pred_proba_all[filter_mask][:, clf.classes_[i]]
 
     df = pd.DataFrame(dataFalsePredict, columns=dataFalsePredict.keys())
     if not os.path.isdir("evaluation"):
