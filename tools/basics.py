@@ -55,7 +55,8 @@ def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
         for (i, label) in enumerate(label_names):
             y_encoded[y == label] = i
         y_encoded = y_encoded.astype(int)
-        filenames = properties.index
+        filenames = np.array(properties['index'].tolist())
+        #filenames = properties.index
         df = properties
 
     if num_samples == 0:

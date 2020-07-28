@@ -1,6 +1,3 @@
-# TODO generalize so different datasets can be used
-# TODO falls vortrainierter Classifier: welche Testdaten sollen genommen werden?
-# TODO Option, neu trainierten Classifier zu speichern?
 import os
 import tools.basics as tools
 import plotting
@@ -17,10 +14,20 @@ import tools.settings as settings
 
 config = settings.config()
 classifiers = settings.get_classifiers()
-classifier = "nearest_neighbors" # look up in classifier_names list
+classifier = "glvq" # look up in classifier_names list
 imgs_falsely_classified = False # only misclassified images are used in                         #
 dims = 2
 
+# "nearest_neighbors"
+# "linear_svm"
+# "rbf_svm"
+# "gaussian_process"
+# "decision_tree"
+# "random_forest"
+# "neural_net"
+# "naive_bayes"
+# "qda"
+# "glvq"
 ################################################################################
 
 def prepare_clf(X_train, y_train):
@@ -86,7 +93,6 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
         # image scatterplot misclassifications with frame depicting classification confidence
         inds_misclassification = np.argwhere(y_pred != y_test).flatten()
         if len(inds_misclassification) > 0:
-            pass
             imgs = tools.load_images(config.path_dataset, filenames_test[inds_misclassification], filenames)
             title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + classifier
             plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], filenames, title_imgs, pred_proba[inds_misclassification], classifier)
@@ -197,7 +203,10 @@ def main():
     y_pred = clf.predict(X_test).astype('int32')
     y_pred_train = clf.predict(X_train).astype('int32')
 
+    trainings_score = clf.score(X_train, y_train)
     score = clf.score(X_test, y_test)
+    print("Trainings Score: ", trainings_score)
+    print("Test Score: ", score)
 
     if classifier == "glvq":
         pred_proba = clf.predict_proba(X_test)

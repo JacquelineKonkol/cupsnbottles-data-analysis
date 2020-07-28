@@ -6,24 +6,12 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap, BoundaryNorm
+from matplotlib.collections import LineCollection
 import matplotlib.image as mpimg
 import matplotlib.colors
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
-from sklearn import model_selection
-from joblib import dump, load
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.decomposition import PCA
-from sklearn.metrics import confusion_matrix
 
 
 def plot_confusion_matrix(cm, classes,
@@ -137,38 +125,51 @@ def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pr
     :param: imgs = images to include into the scatterplot
     :param: indices = of the images to include in relation to whole dataset (unshuffled)
     """
-    #norm=plt.Normalize(-2,2)
-    #cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", ["red","violet","blue"])
-
-    #plt.scatter(x,y,c=c, cmap=cmap, norm=norm)
-    #plt.colorbar()
-    #plt.show()
-
     _, inds_relativeToAll, _ = np.intersect1d(filenames, files_to_plot, return_indices=True)
 
-    top = cm.get_cmap('Oranges_r', 128)
-    bottom = cm.get_cmap('Greens', 128)
+    '''
+    fig, axs = plt.subplots(1, 1)
+    norm = plt.Normalize(0, 1)
+    cmap = matplotlib.cm.cool
 
-    newcolors = np.vstack((top(np.linspace(0, 1, 128)),
-                           bottom(np.linspace(0, 1, 128))))
-    newcmp = ListedColormap(newcolors, name='OrangeGreens')
-
-    newcmp = cm.get_cmap('viridis', 12)
     imgs_framed = []
-
     for i, img in enumerate(imgs):
         img = np.asarray(img)
-        col = newcmp(pred_proba[i])
+        col = cmap(pred_proba[i])
+        imgs_framed.append(img_scatter.frameImage(img, col))
+
+    artists = img_scatter.imageScatter(X_all_embedded[inds_relativeToAll, 0],
+                                       X_all_embedded[inds_relativeToAll, 1], imgs_framed,
+                                       img_scale=(30, 30))
+
+    fig.colorbar(artists, ax=axs)
+    plt.show()
+    '''
+
+    fig, axs = plt.subplots(2, figsize=(15, 10), gridspec_kw={'height_ratios': [15,1]})
+    fig.subplots_adjust(bottom=0.5)
+
+    cmap = matplotlib.cm.cool
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
+
+    cb1 = matplotlib.colorbar.ColorbarBase(axs[1], cmap=cmap,
+                                    norm=norm,
+                                    orientation='horizontal')
+    cb1.set_label('Prediction Probability')
+
+    imgs_framed = []
+    for i, img in enumerate(imgs):
+        img = np.asarray(img)
+        col = cmap(pred_proba[i])
         imgs_framed.append(img_scatter.frameImage(img,col))
 
-    fig = plt.figure()
+
     artists = img_scatter.imageScatter(X_all_embedded[inds_relativeToAll, 0],
-                                       X_all_embedded[inds_relativeToAll, 1],imgs_framed,img_scale=(25,25))
+                                       X_all_embedded[inds_relativeToAll, 1],imgs_framed, ax=axs[0], img_scale=(30,30))
 
 
-    fig.suptitle(title, fontsize=10)
+    fig.suptitle(title, fontsize=20)
     plt.grid()
 
-    #fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap))
     fig.savefig('plots/' + classifier.replace(' ', '_') + '_imgs_scatter.png')
     plt.show()
