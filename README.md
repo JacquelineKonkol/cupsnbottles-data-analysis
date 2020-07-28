@@ -50,3 +50,13 @@ All details for the evaluation can be customized in the **config.ini** file, inc
 If not specified otherwise, the evaluation process will automatically load the best parameters for the classifier as found in the grid search and start training. Analysis involves plots to highlight the classification performance (e.g. an overview, confusion matrices and scatterplots with depicted samples). The plots use a t-SNE embedding of the high-dimensional data and are saved to **/plots**. Additionally, a CSV file found in **/evaluation** will save meaningful information on misclassified samples.
 
 The process is started by running `python evaluation.py`.
+
+---
+
+## Plot Examples
+### Image of an overview
+![Image of Overview](https://github.com/JacquelineKonkol/cupsnbottles-data-analysis/blob/j-dev/plots/RBF_SVM.png)
+### Image of a scatterplot
+![Image of Scatterplot](https://github.com/JacquelineKonkol/cupsnbottles-data-analysis/blob/j-dev/plots/linear_svmlowest_confidence.png)
+### Image of a confusion matrix
+![Image of Confusion Matrix](https://github.com/JacquelineKonkol/cupsnbottles-data-analysis/blob/j-dev/plots/conf_matrix_linear_svmnorm_cupsnbottles.png)
