@@ -1,6 +1,7 @@
 import cupsnbottles.load_cupsnbottles as load_cupsnbottles
 import cupsnbottles.img_scatter as img_scatter
 import tools.basics as tools
+import tools.settings as settings
 
 import itertools
 import numpy as np
@@ -13,6 +14,8 @@ import matplotlib.colors
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 
+config = settings.config()
+classifier = config.classifier
 
 def plot_confusion_matrix(cm, classes,
                           img_name,
@@ -41,7 +44,7 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.savefig("./plots/conf_matrix_" + img_name)
+    plt.savefig("./plots/conf_matrix_" + classifier + img_name)
     plt.show()
 
 
@@ -50,8 +53,9 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
     """
     nD case: returns data embedded into n dimensions using t_sne
     3D case: simple t-SNE 3D plot with gt labels
-    2D case: t-SNE plot with gt labels, with predicted labels, the difference between
+    2D case: t-SNE plot with gt labels, predicted labels, the difference between
              the two and the classification confidence for each prediction
+             the embedding is calculated with t-SNE on all data points
     :returns: embedded data in n-dim
     """
     if num_samples == 0: num_samples = len(X_test)
@@ -118,45 +122,31 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
         return X_embedded
 
 
-def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pred_proba, classifier):
+def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pred_proba, plotting_type):
     """
-    :param: X_embedded = should be a 2D embedding of the whole dataset
-    :param: df = dataframe containing the images load_properties
+    Creates a scatterplot containing selected image samples. These are framed with a color representing
+    the prediction confidence from the classifier.
+    :param: X_all_embedded = should be a 2D embedding of the whole dataset
     :param: imgs = images to include into the scatterplot
-    :param: indices = of the images to include in relation to whole dataset (unshuffled)
+    :param: files_to_plot = filenames of images in question
+    :param: filenames = list of all filenames in the dataset
+    :param: title = title of the figure
+    :param: pred_proba = classification probability values for the samples in question
     """
+
+    # find where the images for plotting are amongst all the available samples in the dataset
     _, inds_relativeToAll, _ = np.intersect1d(filenames, files_to_plot, return_indices=True)
-
-    '''
-    fig, axs = plt.subplots(1, 1)
-    norm = plt.Normalize(0, 1)
-    cmap = matplotlib.cm.cool
-
-    imgs_framed = []
-    for i, img in enumerate(imgs):
-        img = np.asarray(img)
-        col = cmap(pred_proba[i])
-        imgs_framed.append(img_scatter.frameImage(img, col))
-
-    artists = img_scatter.imageScatter(X_all_embedded[inds_relativeToAll, 0],
-                                       X_all_embedded[inds_relativeToAll, 1], imgs_framed,
-                                       img_scale=(30, 30))
-
-    fig.colorbar(artists, ax=axs)
-    plt.show()
-    '''
 
     fig, axs = plt.subplots(2, figsize=(15, 10), gridspec_kw={'height_ratios': [15,1]})
     fig.subplots_adjust(bottom=0.5)
-
     cmap = matplotlib.cm.cool
     norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
-
     cb1 = matplotlib.colorbar.ColorbarBase(axs[1], cmap=cmap,
                                     norm=norm,
                                     orientation='horizontal')
     cb1.set_label('Prediction Probability')
 
+    # frame images according to their prediction probability
     imgs_framed = []
     for i, img in enumerate(imgs):
         img = np.asarray(img)
@@ -166,10 +156,8 @@ def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pr
 
     artists = img_scatter.imageScatter(X_all_embedded[inds_relativeToAll, 0],
                                        X_all_embedded[inds_relativeToAll, 1],imgs_framed, ax=axs[0], img_scale=(30,30))
-
-
     fig.suptitle(title, fontsize=20)
     plt.grid()
 
-    fig.savefig('plots/' + classifier.replace(' ', '_') + '_imgs_scatter.png')
+    fig.savefig('plots/' + classifier.replace(' ', '_') + plotting_type + '.png')
     plt.show()
