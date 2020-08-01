@@ -9,8 +9,13 @@ from tools.settings import config
 
 config = config()
 
-# TODO num_samples noch einbauen, oder entfernen?
 def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
+    """
+    Loads dataset as specified in path, details on the dataset should be provided in a .csv file
+    :param num_samples: how many samples the classifier should be evaluated with, default all
+    :param path: path to dataset
+    :return: X, y_encoded, y, label_names, df, filenames
+    """
     # in dataset01/ the properties.csv does not suffice for all the function later used
     if path == 'dataset01/':
         X = open_pkl(path, 'features.pkl')
@@ -112,7 +117,6 @@ def load_images(path, indices, filenames):
 def csv_to_df(path, file):
     return pd.read_csv(os.path.join(path,file))
 
-
 def adjust_dataset(X, y_encoded, filenames, df):
     """
     Considers the data categories vanilla, ambiguous, overlap and both (i.e. ambiguous and overlap)
@@ -122,7 +126,7 @@ def adjust_dataset(X, y_encoded, filenames, df):
     :param: y_encoded = labels of x as integers
     :param: filenames = also correspond to the index the image can be found in X
     :param: df = pandas dataframe of the meta-data given in properties.csv
-    :returns:
+    :returns: X_train, X_test, y_train, y_test, filenames_train, filenames_test
     """
 
     ### TODO soll der Fall both anders gehändelt werden?
@@ -191,11 +195,6 @@ def adjust_dataset(X, y_encoded, filenames, df):
     print('Total training samples: ', len(y_train))
     print('Total testing samples: ', len(y_test))
     print('>> DONE Preparing Dataset')
-
-    a = np.arange(20)
-    print(a[:8])
-    print(a[-8:])
-    print(a[-0:])
 
     # shuffle again
     np.random.seed(44)

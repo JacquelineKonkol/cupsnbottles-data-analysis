@@ -27,6 +27,7 @@ class config():
             # load config
             # [STANDARD]
             self.use_pretrained_classifier = True if config['STANDARD']['use_pretrained_classifier'] == 'True' else False
+            self.classifier = config['STANDARD']['classifier']
             self.path_dataset = config['STANDARD']['path_dataset']
             self.num_samples = int(config['STANDARD']['num_samples'])
             self.path_best_params = config['STANDARD']['path_best_params']

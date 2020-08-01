@@ -15,20 +15,10 @@ from glvq import *
 
 config = settings.config()
 classifiers = settings.get_classifiers()
-classifier = "Nearest_Neighbors".lower() # look up in classifier_names list
+classifier = config.classifier
 imgs_falsely_classified = False # only misclassified images are used in                         #
 dims = 2
 
-# "nearest_neighbors"
-# "linear_svm"
-# "rbf_svm"
-# "gaussian_process"
-# "decision_tree"
-# "random_forest"
-# "neural_net"
-# "naive_bayes"
-# "qda"
-# "glvq"
 ################################################################################
 
 def prepare_clf(X_train, y_train):
@@ -55,21 +45,20 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
     Produces visualization of - confusion matrix for train and test set each (+ normalized version)
                               - scatterplot collage with classification results and useful information
                               - image scatterplots of categories of interest
-    :param X_test
-    :param X_train
-    :param y_train
-    :param y_test
-    :param y_pred_train:
-    :param y_pred:
+    :param X_test: image features from test
+    :param X_train: image features from train
+    :param y_train_ y encoded into integers for train data
+    :param y_test: y encoded into integers for test data
+    :param y_pred_train: predicted encoded label for training data
+    :param y_pred: predicted encoded label for testign data
     :param df: pandas dataframe of the meta-data given in properties.csv
-    :param y:
+    :param y: y with original label names
     :param label_names: list of all available classes
-    :param pred_proba:
-    :param score
-    :param filenames: also correspond to the index the image can be found in X
-    :param filenames_train:
-    :param filenames_test:
-    :return:
+    :param pred_proba: confidence of the classifier for the test samples
+    :param score: test score
+    :param filenames
+    :param filenames_train
+    :param filenames_test
     """
 
     print('>> Visualization')
@@ -101,7 +90,7 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
         if len(inds_misclassification) > 0:
             imgs = tools.load_images(config.path_dataset, filenames_test[inds_misclassification], filenames)
             title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], filenames, title_imgs, pred_proba[inds_misclassification], classifier)
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], filenames, title_imgs, pred_proba[inds_misclassification], 'misclassifications')
 
         # image scatterplot ambiguous in test with frame denoting classification success
         if config.ambiguous_test_part > 0:
@@ -110,7 +99,7 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
             title_imgs = str(len(imgs)) + ' ambiguous samples as classified by ' + classifier
             _, inds_in_test, _ = np.intersect1d(filenames_test, files_to_plot, return_indices=True)
-            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], classifier)
+            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], 'ambiguous')
 
         # image scatterplot overlap in test with frame denoting classification success
         if config.overlap_test_part > 0:
@@ -119,7 +108,7 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
             title_imgs = str(len(imgs)) + ' overlap samples as classified by ' + classifier
             _, inds_in_test, _ = np.intersect1d(filenames_test, files_to_plot, return_indices=True)
-            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], classifier)
+            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], 'overlap')
 
         # image scatterplot low confidence (100 images by default)
         if pred_proba is not None:
@@ -129,12 +118,11 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
             pred_proba, filenames_test = (list(t) for t in zip(*sorted(zip(pred_proba, filenames_test))))
             imgs = tools.load_images(config.path_dataset, np.arange(default_nb), filenames_test)
             title_imgs = str(default_nb) + ' lowest confidence samples as classified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[:default_nb], filenames, title_imgs, pred_proba[:default_nb], classifier)
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[:default_nb], filenames, title_imgs, pred_proba[:default_nb], 'lowest_confidence')
         print('>> DONE Visualization')
 
 
 def create_filter_maske(y_test, y_pred, pred_proba, mode="all_test_samples", confidence_threshold = 0.7):
-
     if mode == "wrong_test_samples":
         filter = y_test != y_pred
     elif mode == "unconfident_test_samples":
@@ -157,6 +145,9 @@ def calculate_cluster_mean(X_2dim, y, label_names):
 
 
 def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, indx_test):
+    """
+    Creates a .csv in evaluation/ with information on misclassified samples
+    """
     print('>> Analysis')
     float_formatter = "{:.2f}".format
     np.set_printoptions(formatter={'float_kind': float_formatter})
@@ -234,7 +225,7 @@ def main():
         pred_proba = np.max(pred_proba_all, axis=1)
 
     analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
-    #visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
+    visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
 
 
 if __name__ == "__main__":
