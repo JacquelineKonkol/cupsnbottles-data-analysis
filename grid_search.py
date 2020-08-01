@@ -50,7 +50,7 @@ def run_glvq(X, y):
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.33, random_state=42)
 
     grid_search_results = []
-    clf_index = config.classifier_names.index(classifier)
+    clf_index = config.classifier_names.index("glvq")
     for param_set in itertools.product(*config.parameters_grid_search[clf_index].values(), repeat=1):
 
         clf = glvq(max_prototypes_per_class=int(param_set[0]),
@@ -74,7 +74,7 @@ def run_glvq(X, y):
         os.mkdir(result_path_clf)
 
     dump(grid_search_results_sorted[0][2], result_path_clf + "glvq" + '.joblib')
-    dump(grid_search_results_sorted[0][0], result_path_params + "glvq" + '_params.joblib')
+    dump(grid_search_results_sorted[0][1], result_path_params + "glvq" + '_params.joblib')
 
     best_clf = grid_search_results_sorted[0][2]
 
