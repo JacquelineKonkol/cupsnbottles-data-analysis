@@ -15,7 +15,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 
 config = settings.config()
-classifier = config.classifier
 
 def plot_confusion_matrix(cm, classes,
                           img_name,
@@ -44,8 +43,9 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.savefig("./plots/conf_matrix_" + classifier + img_name)
-    plt.show()
+    plt.savefig("./plots/" + config.dataset_name + "/conf_matrix_" + img_name)
+    #plt.show()
+    plt.close()
 
 
 
@@ -84,8 +84,9 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
                        marker='.', label=label, color=colors[i])
         plt.legend()
         plt.grid()
-        plt.savefig("./plots/t-sne_3dim_" + img_name)
-        plt.show()
+        plt.savefig("./plots/" + config.dataset_name + "/t-sne_3dim_" + img_name)
+        #plt.show()
+        plt.close()
 
         return X_embedded
 
@@ -114,15 +115,16 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
         axes[0][1].legend(loc = 'upper right', bbox_to_anchor = (1.45, 1.2))
         plt.tight_layout()
 
-        fig.savefig('plots/' + img_name + classifier.replace(' ', '_') + '.png', bbox_inches='tight')
-        plt.show()
+        fig.savefig('plots/' + config.dataset_name + "/" + img_name + '.png', bbox_inches='tight')
+        #plt.show()
+        plt.close()
 
         return X_embedded
     else:
         return X_embedded
 
 
-def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pred_proba, plotting_type):
+def image_conf_scatter(X_all_embedded, imgs, files_to_plot,filenames, classifier, title, pred_proba, plotting_type):
     """
     Creates a scatterplot containing selected image samples. These are framed with a color representing
     the prediction confidence from the classifier.
@@ -159,5 +161,6 @@ def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pr
     fig.suptitle(title, fontsize=20)
     plt.grid()
 
-    fig.savefig('plots/' + classifier.replace(' ', '_') + plotting_type + '.png')
-    plt.show()
+    fig.savefig('plots/' + config.dataset_name + "/" + classifier + "_" + plotting_type + '.png')
+    #plt.show()
+    plt.close()

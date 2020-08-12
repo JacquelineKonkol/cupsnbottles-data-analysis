@@ -15,7 +15,6 @@ from glvq import *
 
 config = settings.config()
 classifiers = settings.get_classifiers()
-classifier = config.classifier
 imgs_falsely_classified = False # only misclassified images are used in                         #
 dims = 2
 
@@ -24,14 +23,15 @@ dims = 2
 def prepare_clf(X_train, y_train):
     if config.use_pretrained_classifier:
         # load the desired trained classifier
-        clf = load(config.path_trained_classifiers + config.path_dataset + classifier.replace(' ', '_') + ".joblib")
+        clf = load(config.path_trained_classifiers + config.path_dataset + config.classifier.replace(' ', '_') + ".joblib")
     else:
         # train anew with best model parameters
-        loaded_params = load(config.path_best_params + config.path_dataset + classifier.replace(' ', '_') + "_params.joblib")
-        if classifier != "glvq":
-            clf = classifiers[config.classifier_names.index(classifier)]
+        loaded_params = load(config.path_best_params + config.path_dataset + config.classifier.replace(' ', '_') + "_params.joblib")
+        if config.classifier != "glvq":
+            clf = classifiers[config.classifier_names.index(config.classifier)]
             clf.set_params(**loaded_params)
             clf.fit(X_train, y_train)
+            print("Params for " + config.classifier + ": " + str(loaded_params))
         else:
             clf = glvq(max_prototypes_per_class=loaded_params[0],
                                       learning_rate=loaded_params[1],
@@ -62,25 +62,29 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
     """
 
     print('>> Visualization')
+
+    if not os.path.isdir("./plots/" + config.dataset_name):
+        os.mkdir("./plots/" + config.dataset_name)
+
     ### confusion matrices ###
     if (len(np.unique(y_train)) == len(label_names)):
         cm_train = metrics.confusion_matrix(y_train, y_pred_train)
-        plotting.plot_confusion_matrix(cm_train, classes=label_names, img_name="absolute_cupsnbottles_train", cmap=plt.cm.Blues)
-        plotting.plot_confusion_matrix(cm_train, classes=label_names, img_name="norm_cupsnbottles_train", normalize=True,
+        plotting.plot_confusion_matrix(cm_train, classes=label_names, img_name="absolute_cupsnbottles_train_" + config.classifier, cmap=plt.cm.Blues)
+        plotting.plot_confusion_matrix(cm_train, classes=label_names, img_name="norm_cupsnbottles_train_" + config.classifier, normalize=True,
                                        title='Normalized confusion matrix, trainings data', cmap=plt.cm.Blues)
 
     if (len(np.unique(y_test)) == len(label_names)):
         cm = metrics.confusion_matrix(y_test, y_pred)
-        plotting.plot_confusion_matrix(cm, classes=label_names, img_name="absolute_cupsnbottles", cmap=plt.cm.Greens)
-        plotting.plot_confusion_matrix(cm, classes=label_names, img_name="norm_cupsnbottles", normalize=True,
+        plotting.plot_confusion_matrix(cm, classes=label_names, img_name="absolute_cupsnbottles_" + config.classifier, cmap=plt.cm.Greens)
+        plotting.plot_confusion_matrix(cm, classes=label_names, img_name="norm_cupsnbottles_" + config.classifier, normalize=True,
                                        title='Normalized confusion matrix', cmap=plt.cm.Greens)
 
     ### t-sne scatterplot ###
     if (pred_proba is not None):
-        title = classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
+        title = config.classifier + ', trained on ' + str(len(X_train)) + ' samples. Score: ' + str(score)
         X_embedded = plotting.t_sne_plot(X, X_test, y_test, y_pred, filenames_test, pred_proba, label_names, title, config.num_samples,
-                                         classifier,
-                                         "cupsnbottles", dims)
+                                         config.classifier,
+                                         "cupsnbottles_" + config.classifier, dims)
 
         ### image scatterplots ###
         X_all_embedded = tools.t_sne(X)
@@ -89,26 +93,26 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
         inds_misclassification = np.argwhere(y_pred != y_test).flatten()
         if len(inds_misclassification) > 0:
             imgs = tools.load_images(config.path_dataset, filenames_test[inds_misclassification], filenames)
-            title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], filenames, title_imgs, pred_proba[inds_misclassification], 'misclassifications')
+            title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + config.classifier
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], filenames, config.classifier, title_imgs, pred_proba[inds_misclassification], 'misclassifications')
 
         # image scatterplot ambiguous in test with frame denoting classification success
         if config.ambiguous_test_part > 0:
             indicesAmbiguous = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 0)]["index"])
             files_to_plot = np.intersect1d(indicesAmbiguous, filenames_test)
             imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
-            title_imgs = str(len(imgs)) + ' ambiguous samples as classified by ' + classifier
+            title_imgs = str(len(imgs)) + ' ambiguous samples as classified by ' + config.classifier
             _, inds_in_test, _ = np.intersect1d(filenames_test, files_to_plot, return_indices=True)
-            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], 'ambiguous')
+            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, config.classifier, title_imgs, pred_proba[inds_in_test], 'ambiguous')
 
         # image scatterplot overlap in test with frame denoting classification success
         if config.overlap_test_part > 0:
             indicesOverlap = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 1)]["index"])
             files_to_plot = np.intersect1d(indicesOverlap, filenames_test)
             imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
-            title_imgs = str(len(imgs)) + ' overlap samples as classified by ' + classifier
+            title_imgs = str(len(imgs)) + ' overlap samples as classified by ' + config.classifier
             _, inds_in_test, _ = np.intersect1d(filenames_test, files_to_plot, return_indices=True)
-            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], 'overlap')
+            plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, config.classifier, title_imgs, pred_proba[inds_in_test], 'overlap')
 
         # image scatterplot low confidence (100 images by default)
         if pred_proba is not None:
@@ -117,8 +121,8 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
                 default_nb = len(pred_proba)
             pred_proba, filenames_test = (list(t) for t in zip(*sorted(zip(pred_proba, filenames_test))))
             imgs = tools.load_images(config.path_dataset, np.arange(default_nb), filenames_test)
-            title_imgs = str(default_nb) + ' lowest confidence samples as classified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[:default_nb], filenames, title_imgs, pred_proba[:default_nb], 'lowest_confidence')
+            title_imgs = str(default_nb) + ' lowest confidence samples as classified by ' + config.classifier
+            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[:default_nb], filenames, config.classifier, title_imgs, pred_proba[:default_nb], 'lowest_confidence')
         print('>> DONE Visualization')
 
 
@@ -140,7 +144,7 @@ def calculate_cluster_mean(X_2dim, y, label_names):
         mean = np.mean(X_selected, axis=0)
         var = np.var(X_selected, axis=0)
         cluster_infos[i] = {'mean':mean, "var":var}
-
+    print(cluster_infos)
     return cluster_infos
 
 
@@ -183,50 +187,71 @@ def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_p
     for i in range(0, len(label_names)):
         key ='Dist to Cluster ' + label_names[i]
         dataFalsePredict[key] = ["{:.3f}".format(float(np.linalg.norm(point-cluster_means[i]['mean']))).replace(".", ",") for point in X_embedded[IDs]]
-        if classifier != "glvq":
+        if config.classifier != "glvq":
             key = 'Predict Prob. ' + label_names[clf.classes_[i]]
             dataFalsePredict[key] = pred_proba_all[filter_mask][:, clf.classes_[i]]
 
     df = pd.DataFrame(dataFalsePredict, columns=dataFalsePredict.keys())
     if not os.path.isdir("evaluation"):
         os.mkdir("evaluation")
-    df.to_csv("evaluation/" + config.path_dataset.replace('/', '') + "_analysis_" + classifier.replace(' ', '_') + ".csv", mode='w',
+    df.to_csv("evaluation/" + config.path_dataset.replace('/', '') + "_analysis_" + config.classifier.replace(' ', '_') + ".csv", mode='w',
                      sep=";", index=False)
     print('>> DONE Analysis')
 
 
 def main():
-    X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
 
-    if config.normal_evaluation:
-        X_train, X_test, y_train, y_test, filenames_train, filenames_test = model_selection.train_test_split(X,
-                                                                                                             y_encoded,
-                                                                                                             filenames,
-                                                                                                             test_size=0.33,
-                                                                                                             random_state=42)
-    else:
-        X_train, X_test, y_train, y_test, filenames_train, filenames_test = tools.adjust_dataset(X, y_encoded, filenames, df)
+    results = {'clf': [],
+               'train score': [],
+               'test score': []}
+    results_filename = config.dataset_name + "_results_mixed"
 
-    clf = prepare_clf(X_train, y_train)
+    #for i in config.classifier_names:
+    #['nearest_neighbors', 'linear_svm', 'rbf_svm', 'gaussian_process', 'decision_tree', 'random_forest', 'neural_net', 'naive_bayes', 'qda', 'glvq']
+    for i in ['nearest_neighbors', 'linear_svm', 'rbf_svm']:
+        print(">> Evaluation " + i)
+        config.setClassifier(i.lower())
+        X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
 
-    y_pred = clf.predict(X_test).astype('int32')
-    y_pred_train = clf.predict(X_train).astype('int32')
+        if config.normal_evaluation:
+            X_train, X_test, y_train, y_test, filenames_train, filenames_test = model_selection.train_test_split(X,
+                                                                                                                 y_encoded,
+                                                                                                                 filenames,
+                                                                                                                 test_size=0.33,
+                                                                                                                 random_state=42)
+        else:
+            X_train, X_test, y_train, y_test, filenames_train, filenames_test = tools.adjust_dataset(X, y_encoded, filenames, df)
 
-    trainings_score = clf.score(X_train, y_train)
-    score = clf.score(X_test, y_test)
-    print("Trainings Score: ", trainings_score)
-    print("Test Score: ", score)
+        clf = prepare_clf(X_train, y_train)
 
-    if classifier == "glvq":
-        pred_proba = clf.predict_proba(X_test)
-        pred_proba_all = clf.predict_proba_full_matrix(X_test)
-    else:
-        pred_proba_all = clf.predict_proba(X_test)
-        pred_proba = np.max(pred_proba_all, axis=1)
+        y_pred = clf.predict(X_test).astype('int32')
+        y_pred_train = clf.predict(X_train).astype('int32')
 
-    analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
-    visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
+        trainings_score = clf.score(X_train, y_train)
+        score = clf.score(X_test, y_test)
+        print("Trainings Score: ", trainings_score)
+        print("Test Score: ", score)
 
+        results['clf'].append(config.classifier)
+        results['train score'].append(trainings_score)
+        results['test score'].append(score)
+
+        if config.classifier == "glvq":
+            pred_proba = clf.predict_proba(X_test)
+            pred_proba_all = clf.predict_proba_full_matrix(X_test)
+        else:
+            pred_proba_all = clf.predict_proba(X_test)
+            pred_proba = np.max(pred_proba_all, axis=1)
+
+        #analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
+        #visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
+
+    results_df = pd.DataFrame(results, columns=results.keys())
+    if not os.path.isdir("evaluation/" + config.dataset_name):
+        os.mkdir("evaluation"  + config.dataset_name)
+    results_df.to_csv("evaluation/" + config.dataset_name + "/" + results_filename + ".csv",
+              mode='w',
+              sep=";", index=False)
 
 if __name__ == "__main__":
     main()

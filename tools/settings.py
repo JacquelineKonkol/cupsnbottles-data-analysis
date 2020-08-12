@@ -29,6 +29,7 @@ class config():
             self.use_pretrained_classifier = True if config['STANDARD']['use_pretrained_classifier'] == 'True' else False
             self.classifier = config['STANDARD']['classifier']
             self.path_dataset = config['STANDARD']['path_dataset']
+            self.dataset_name = config['STANDARD']['dataset_name']
             self.num_samples = int(config['STANDARD']['num_samples'])
             self.path_best_params = config['STANDARD']['path_best_params']
             self.path_trained_classifiers = config['STANDARD']['path_trained_classifier']
@@ -77,6 +78,8 @@ class config():
         else:
             raise Exception("Config file: %s does not exists" % config_loc)
 
+    def setClassifier(self, x):
+        self.classifier = x
 
 
 def get_classifiers():

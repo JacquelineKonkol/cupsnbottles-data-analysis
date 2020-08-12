@@ -133,14 +133,14 @@ def adjust_dataset(X, y_encoded, filenames, df):
 
     # determine sample categories
     indicesAmbiguous = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 0)]["index"])
-    indicesOverlap = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 1)]["index"])
+    indicesOverlap = np.array(df.loc[(df.ambiguous == 0) & (df.overlap >= 1)]["index"])
     indicesVanilla = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 0)]["index"])
-    indicesBoth = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 1)]["index"])
+    indicesBoth = np.array(df.loc[(df.ambiguous == 1) & (df.overlap >= 1)]["index"])
 
     maskAmbiguous = np.array((df['ambiguous'] == 1) & (df['overlap'] == 0))
-    maskOverlap = np.array((df['ambiguous'] == 0) & (df['overlap'] == 1))
+    maskOverlap = np.array((df['ambiguous'] == 0) & (df['overlap'] >= 1))
     maskVanilla = np.array((df['ambiguous'] == 0) & (df['overlap'] == 0))
-    maskBoth = np.array((df['ambiguous'] == 1) & (df['overlap'] == 1))
+    maskBoth = np.array((df['ambiguous'] == 1) & (df['overlap'] >= 1))
 
     # shuffle dataset
     print('>> Preparing Dataset')

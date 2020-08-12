@@ -6,13 +6,11 @@ import pandas as pd
 import seaborn as sns
 
 
-num_samples = 2179 #2179 at most
-
 # parameters to iterate over
 t_sne_params = {
-    "perplexities" : [30, 70, 100],
+    "perplexities" : [30, 70],
     "learning_rates" : [10.0, 200.0, 500.0],
-    "n_iters" : [250, 1000, 5000]
+    "n_iters" : [250, 1000]
 }
 
 # TODO: Einheitliches Plotting + Umzug in plotting
@@ -24,7 +22,7 @@ def plot_reduced_X(X_reduced, y_label, fname):
               '#ffc400', '#00d7ff']
     palette = sns.set_palette(sns.color_palette(colors))
     sns.lmplot(data=df, x='x', y='y', hue='label', fit_reg=False, size=10,
-               markers=['^', 'v', 's', 'o', '1', '2', "p", "*", "+", "x", "D"])
+               markers=['^', 'v', 's', 'o', '1', '2', "p", "*", "+"])
     plt.title(fname, pad=1.0)
     print('saving this plot as image in present working directory...')
     plt.savefig("./plots/t-sne/" + fname)
@@ -39,7 +37,7 @@ def grid_search_t_sne(X, y):
 
 
 def main():
-    X, y_encoded, y, label_names, df = tools.load_gt_data(num_samples)
+    X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(0)
     grid_search_t_sne(X, y)
     print(list(itertools.product(*t_sne_params.values(), repeat=1)))
 
