@@ -160,6 +160,7 @@ def image_conf_scatter(X_all_embedded, imgs, files_to_plot,filenames, classifier
                                        X_all_embedded[inds_relativeToAll, 1],imgs_framed, ax=axs[0], img_scale=(30,30))
     fig.suptitle(title, fontsize=20)
     plt.grid()
+    plt.tight_layout()
 
     fig.savefig('plots/' + config.dataset_name + "/" + classifier + "_" + plotting_type + '.png')
     #plt.show()
