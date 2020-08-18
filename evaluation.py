@@ -36,6 +36,7 @@ def prepare_clf(X_train, y_train):
             clf = glvq(max_prototypes_per_class=loaded_params[0],
                                       learning_rate=loaded_params[1],
                                       strech_factor=loaded_params[2])
+            print("Params for glvq: ", loaded_params[0], loaded_params[1], loaded_params[2])
             clf.fit(X_train, y_train)
     return clf
 
@@ -204,11 +205,11 @@ def main():
     results = {'clf': [],
                'train score': [],
                'test score': []}
-    results_filename = config.dataset_name + "_results_mixed"
+    results_filename = config.dataset_name + "_results_TrOTeN"
 
-    #for i in config.classifier_names:
+    for i in config.classifier_names:
     #['nearest_neighbors', 'linear_svm', 'rbf_svm', 'gaussian_process', 'decision_tree', 'random_forest', 'neural_net', 'naive_bayes', 'qda', 'glvq']
-    for i in ['nearest_neighbors', 'linear_svm', 'rbf_svm']:
+    #for i in ['glvq']:
         print(">> Evaluation " + i)
         config.setClassifier(i.lower())
         X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
@@ -223,7 +224,6 @@ def main():
             X_train, X_test, y_train, y_test, filenames_train, filenames_test = tools.adjust_dataset(X, y_encoded, filenames, df)
 
         clf = prepare_clf(X_train, y_train)
-
         y_pred = clf.predict(X_test).astype('int32')
         y_pred_train = clf.predict(X_train).astype('int32')
 
@@ -244,11 +244,11 @@ def main():
             pred_proba = np.max(pred_proba_all, axis=1)
 
         #analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
-        #visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
+        visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
 
     results_df = pd.DataFrame(results, columns=results.keys())
     if not os.path.isdir("evaluation/" + config.dataset_name):
-        os.mkdir("evaluation"  + config.dataset_name)
+        os.mkdir("evaluation/"  + config.dataset_name)
     results_df.to_csv("evaluation/" + config.dataset_name + "/" + results_filename + ".csv",
               mode='w',
               sep=";", index=False)

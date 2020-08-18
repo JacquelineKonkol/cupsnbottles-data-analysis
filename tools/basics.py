@@ -90,7 +90,7 @@ def read_properties():
 
     return [], []
 
-def t_sne(X, dims=2, perplexity=30, learning_rate=200.0, n_iter=1000):
+def t_sne(X, dims=2, perplexity=30, learning_rate=10.0, n_iter=1000):
     """
     Calls t-SNE dimension reduction with default parameters. Can be adjusted.
     """
