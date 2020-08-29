@@ -9,6 +9,32 @@ from tools.settings import config
 
 config = config()
 
+def load_data_with_category(num_samples=config.num_samples, path=config.path_dataset):
+    """
+    Loads data with binary labels - ambiguous and non ambiguous
+    """
+    X = open_pkl(path, 'features.pkl')
+    properties = csv_to_df(path, 'properties.csv')
+    y = np.array(properties.ambiguous)
+    label_names = np.unique(y)
+    y_encoded = y.copy()
+    for (i, label) in enumerate(label_names):
+        y_encoded[y == label] = i
+    y_encoded = y_encoded.astype(int)
+    filenames = np.array(properties['index'].tolist())
+    df = properties
+
+    for i in range(len(y)):
+        if y[i] == 0:
+            y[i] = "non-ambiguous"
+        else:
+            y[i] = "ambiguous"
+
+    if num_samples == 0:
+        num_samples = len(X)
+
+    return X[:num_samples], y_encoded[:num_samples], y[:num_samples], label_names, df[:num_samples], filenames[:num_samples]
+
 def load_gt_data(num_samples=config.num_samples, path=config.path_dataset):
     """
     Loads dataset as specified in path, details on the dataset should be provided in a .csv file

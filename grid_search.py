@@ -44,7 +44,6 @@ def save_grid_search_results(clf, classifier_name):
 
     print('The best parameters for ' +  classifier_name + ' are: ', clf.best_params_, ' with score: ', clf.best_score_)
 
-
 def run_glvq(X, y):
     # Todo gridsearch
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.33, random_state=42)
@@ -146,7 +145,8 @@ def dim_red(X, dims=2, init='pca'):
 
 def main():
     # load the data
-    X, y_encoded, y, label_names, df, filenames = tools.load_gt_data()
+    #X, y_encoded, y, label_names, df, filenames = tools.load_gt_data()
+    X, y_encoded, y, label_names, df, filenames = tools.load_data_with_category()
 
     if dims is not None:
         if dims_method:
