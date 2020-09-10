@@ -60,7 +60,7 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
     """
     if num_samples == 0: num_samples = len(X_test)
     print(num_samples)
-    colors = np.array(["black", "grey", "orange", "darkred", "orchid",
+    colors = np.array(["orchid", "orange", "grey", "darkred", "black",
                        "lime", "lightgrey", "red", "green", "#bcbd22", "c"])
     gt_colors = colors[y_gt]
     pred_colors = colors[y_pred]
@@ -78,10 +78,10 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
         x_co = np.expand_dims(X_embedded[:, 0], 1)
         y_co = np.expand_dims(X_embedded[:, 1], 1)
         z_co = np.expand_dims(X_embedded[:, 2], 1)
-        ax.scatter(x_co, y_co, z_co, marker='.', color=gt_colors)
+        ax.scatter(x_co, y_co, z_co, marker='o', color=gt_colors)
         for (i, label) in enumerate(labels_old):
             ax.scatter(np.array((1,1)), np.array((1,1)), np.array((1,1)),
-                       marker='.', label=label, color=colors[i])
+                       marker='o', label=label, color=colors[i])
         plt.legend()
         plt.grid()
         plt.savefig("./plots/t-sne_3dim_" + img_name)
@@ -100,17 +100,17 @@ def t_sne_plot(X, X_test, y_gt, y_pred, filenames_test, pred_proba, labels_old, 
             #ax.set_yticks([])
             ax.grid()
             if i < 3:
-                ax.scatter(X_embedded_all[filenames_test, 0], X_embedded_all[filenames_test, 1], marker='.', color=plotcolors[i])
+                ax.scatter(X_embedded_all[filenames_test, 0], X_embedded_all[filenames_test, 1], marker='o', color=plotcolors[i])
                 #ax.scatter(X_embedded[:, 0], X_embedded[:, 1], marker='.', color=plotcolors[i]) # here t-sne was performed only on test data
             else:
                 cmap = sns.cubehelix_palette(as_cmap=True)
-                points = ax.scatter(X_embedded_all[filenames_test, 0], X_embedded_all[filenames_test, 1], c=pred_proba, marker='.', cmap=cmap)
+                points = ax.scatter(X_embedded_all[filenames_test, 0], X_embedded_all[filenames_test, 1], c=pred_proba, marker='o', cmap=cmap)
                 #points = ax.scatter(X_embedded[:, 0], X_embedded[:, 1], c=pred_proba, marker='.', cmap=cmap) # here t-sne was performed only on test data
                 fig.colorbar(points)
 
 
         for (i, label) in enumerate(labels_old):
-            axes[0][1].scatter([], [], marker='.', label=label, color=colors[i])
+            axes[0][1].scatter([], [], marker='o', label=label, color=colors[i])
         axes[0][1].legend(loc = 'upper right', bbox_to_anchor = (1.45, 1.2))
         plt.tight_layout()
 
@@ -134,8 +134,18 @@ def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pr
     :param: pred_proba = classification probability values for the samples in question
     """
 
+    fig = plt.figure()
+    a = fig.add_subplot(1, 2, 1)
+    imgplot = plt.imshow(imgs[0])
+    a.set_title(files_to_plot[0])
+    a = fig.add_subplot(1, 2, 2)
+    imgplot = plt.imshow(imgs[1])
+    imgplot.set_clim(0.0, 0.7)
+    a.set_title(files_to_plot[1])
+
     # find where the images for plotting are amongst all the available samples in the dataset
     _, inds_relativeToAll, _ = np.intersect1d(filenames, files_to_plot, return_indices=True)
+    print("inds_relativeToAll: ", inds_relativeToAll)
 
     fig, axs = plt.subplots(2, figsize=(15, 10), gridspec_kw={'height_ratios': [15,1]})
     fig.subplots_adjust(bottom=0.5)
@@ -156,7 +166,7 @@ def image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title, pr
 
     artists = img_scatter.imageScatter(X_all_embedded[inds_relativeToAll, 0],
                                        X_all_embedded[inds_relativeToAll, 1],imgs_framed, ax=axs[0], img_scale=(30,30))
-    fig.suptitle(title, fontsize=20)
+    fig.suptitle(title, fontsize=25)#,  y=1.005)
     plt.grid()
     plt.tight_layout()
 

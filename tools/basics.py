@@ -15,20 +15,19 @@ def load_data_with_category(num_samples=config.num_samples, path=config.path_dat
     """
     X = open_pkl(path, 'features.pkl')
     properties = csv_to_df(path, 'properties.csv')
-    y = np.array(properties.ambiguous)
-    label_names = np.unique(y)
+    y = list(np.array(properties.ambiguous))
+    label_names = ["ambiguous", "non-ambiguous"]
     y_encoded = y.copy()
-    for (i, label) in enumerate(label_names):
-        y_encoded[y == label] = i
-    y_encoded = y_encoded.astype(int)
-    filenames = np.array(properties['index'].tolist())
-    df = properties
-
     for i in range(len(y)):
         if y[i] == 0:
             y[i] = "non-ambiguous"
         else:
             y[i] = "ambiguous"
+    for (i, label) in enumerate(label_names):
+        y_encoded[y == label] = i
+    y_encoded = np.array(y_encoded).astype(int)
+    filenames = np.array(properties['index'].tolist())
+    df = properties
 
     if num_samples == 0:
         num_samples = len(X)
@@ -137,7 +136,7 @@ def load_images(path, indices, filenames):
     suffix = os.listdir(os.path.join(path, 'images'))[0].split(".")[-1]
     imgs = []
     for i in indices:
-        imgs.append(np.array(Image.open(os.path.join(path, 'images', str(filenames[i]) + '.' + str(suffix)))))
+        imgs.append(np.array(Image.open(os.path.join(path, 'images', str(i) + '.' + str(suffix)))))
     return imgs
 
 def csv_to_df(path, file):

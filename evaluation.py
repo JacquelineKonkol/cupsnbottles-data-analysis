@@ -88,21 +88,31 @@ def visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df,
         # image scatterplot misclassifications with frame depicting classification confidence
         inds_misclassification = np.argwhere(y_pred != y_test).flatten()
         if len(inds_misclassification) > 0:
-            imgs = tools.load_images(config.path_dataset, filenames_test[inds_misclassification], filenames)
+            print("indicesMisclassifications: ", filenames_test[inds_misclassification])
+            inds_misclassificationSorted = filenames_test[inds_misclassification]
+            sorting = np.argsort(inds_misclassificationSorted, 0)
+            inds_misclassificationSorted = inds_misclassificationSorted[sorting]
+            print("indicesMisclassificationSorted: ",inds_misclassificationSorted)
+            imgs = tools.load_images(config.path_dataset, inds_misclassificationSorted, filenames)
             title_imgs = str(len(imgs)) + ' test samples that were misclassified by ' + classifier
-            plotting.image_conf_scatter(X_all_embedded, imgs, filenames_test[inds_misclassification], filenames, title_imgs, pred_proba[inds_misclassification], 'misclassifications')
+            plotting.image_conf_scatter(X_all_embedded, imgs, inds_misclassificationSorted, filenames, title_imgs, pred_proba[inds_misclassification][sorting], 'misclassifications')
 
         # image scatterplot ambiguous in test with frame denoting classification success
-        if config.ambiguous_test_part > 0:
+        #if config.ambiguous_test_part > 0:
+        if True:
             indicesAmbiguous = np.array(df.loc[(df.ambiguous == 1) & (df.overlap == 0)]["index"])
+            print("indicesAmbiguous: ", indicesAmbiguous)
             files_to_plot = np.intersect1d(indicesAmbiguous, filenames_test)
-            imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
+            print("files_to_plot: ", files_to_plot)
+            imgs = tools.load_images(config.path_dataset, files_to_plot, filenames_test)
             title_imgs = str(len(imgs)) + ' ambiguous samples as classified by ' + classifier
             _, inds_in_test, _ = np.intersect1d(filenames_test, files_to_plot, return_indices=True)
+            print("inds_in_test: ", inds_in_test)
             plotting.image_conf_scatter(X_all_embedded, imgs, files_to_plot, filenames, title_imgs, pred_proba[inds_in_test], 'ambiguous')
 
         # image scatterplot overlap in test with frame denoting classification success
-        if config.overlap_test_part > 0:
+        #if config.overlap_test_part > 0:
+        if True:
             indicesOverlap = np.array(df.loc[(df.ambiguous == 0) & (df.overlap == 1)]["index"])
             files_to_plot = np.intersect1d(indicesOverlap, filenames_test)
             imgs = tools.load_images(config.path_dataset, files_to_plot, filenames)
@@ -196,7 +206,8 @@ def analysis(X, y_train, X_test, y_test, y_pred, label_names, pred_proba, pred_p
 
 
 def main():
-    X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
+    #X, y_encoded, y, label_names, df, filenames = tools.load_gt_data(config.num_samples, config.path_dataset)
+    X, y_encoded, y, label_names, df, filenames = tools.load_data_with_category(config.num_samples, config.path_dataset)
 
     if config.normal_evaluation:
         X_train, X_test, y_train, y_test, filenames_train, filenames_test = model_selection.train_test_split(X,
@@ -204,6 +215,32 @@ def main():
                                                                                                              filenames,
                                                                                                              test_size=0.33,
                                                                                                              random_state=42)
+
+        print(type(X_test))
+        print("train: ", len(y_train))
+        print(type(X_test))
+        print("test shape: ", np.shape(X_test))
+        print(type(X_test))
+        print("train nb ambiguous: ", list(y_train).count(1))
+        print("train nb non-ambiguous: ", list(y_train).count(0))
+        print("test: ", len(y_test))
+        print("test nb ambiguous: ", list(y_test).count(1))
+        print("test nb non-ambiguous: ", list(y_test).count(0))
+
+        # print("*creating balanced test set*")
+        # # remove samples to have a balanced test dataset
+        # sorting = np.argsort(y_test, 0)
+        # y_test = y_test[sorting]
+        # X_test = X_test[sorting]
+        # filenames_test = filenames_test[sorting]
+        # X_test = X_test[list(y_test).count(0) - list(y_test).count(1):]
+        # filenames_test = filenames_test[list(y_test).count(0) - list(y_test).count(1):]
+        # y_test = y_test[list(y_test).count(0) - list(y_test).count(1):]
+        #
+        # print("test: ", len(y_test))
+        # print("test shape: ", np.shape(X_test))
+        # print("test nb ambiguous: ", list(y_test).count(1))
+        # print("test nb non-ambiguous: ", list(y_test).count(0))
     else:
         X_train, X_test, y_train, y_test, filenames_train, filenames_test = tools.adjust_dataset(X, y_encoded, filenames, df)
 
@@ -216,6 +253,10 @@ def main():
     score = clf.score(X_test, y_test)
     print("Trainings Score: ", trainings_score)
     print("Test Score: ", score)
+    f1_train = metrics.f1_score(y_train, y_pred_train)
+    f1_test = metrics.f1_score(y_test, y_pred)
+    print("F1 train Score: ", f1_train)
+    print("F1 test Score: ", f1_test)
 
     if classifier == "glvq":
         pred_proba = clf.predict_proba(X_test)
@@ -224,7 +265,7 @@ def main():
         pred_proba_all = clf.predict_proba(X_test)
         pred_proba = np.max(pred_proba_all, axis=1)
 
-    analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
+    #analysis(X, y_encoded, X_test, y_test, y_pred, label_names, pred_proba, pred_proba_all, clf, filenames_test)
     visualization(X, X_test, X_train, y_train, y_test, y_pred_train, y_pred, df, y, label_names, pred_proba, score, filenames, filenames_train, filenames_test)
 
 
